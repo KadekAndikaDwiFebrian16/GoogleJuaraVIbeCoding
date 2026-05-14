@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Recipe, Suggestion, InstructionStep } from '../types';
@@ -22,10 +22,13 @@ export default function AdminDashboard() {
   const [coverImage, setCoverImage] = useState('');
   const [mealTime, setMealTime] = useState<'pagi' | 'siang' | 'sore'>('pagi');
   const [condition, setCondition] = useState('');
+  const [prepTime, setPrepTime] = useState('');
+  const [servings, setServings] = useState('');
   const [ingredients, setIngredients] = useState<string[]>(['']);
   const [nutrition, setNutrition] = useState({ calories: '', protein: '', fat: '', carbs: '' });
   const [instructions, setInstructions] = useState<InstructionStep[]>([{ step: 1, text: '', image: '' }]);
   const [submitting, setSubmitting] = useState(false);
+  const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile?.role === 'admin') {
@@ -69,14 +72,14 @@ export default function AdminDashboard() {
       setInstructions(newInst);
   };
 
-  const handleAddRecipe = async (e: React.FormEvent) => {
+  const handleSaveRecipe = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
       const filteredIngredients = ingredients.filter(i => i.trim() !== '');
       const filteredInstructions = instructions.filter(i => i.text.trim() !== '');
       
-      const newRecipe = {
+      const recipeData = {
         title,
         description,
         coverImage: coverImage || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1000&auto=format&fit=crop',
@@ -85,31 +88,63 @@ export default function AdminDashboard() {
         nutrition,
         ingredients: filteredIngredients,
         instructions: filteredInstructions,
-        rating: 5,
-        reviewCount: 0,
-        createdBy: profile?.uid || 'admin',
-        createdAt: serverTimestamp(),
+        prepTime: prepTime || '30 Mnt',
+        servings: servings || '2-4 Porsi',
+        updatedAt: serverTimestamp(),
       };
 
-      await addDoc(collection(db, 'recipes'), newRecipe);
+      if (editingRecipeId) {
+        await updateDoc(doc(db, 'recipes', editingRecipeId), recipeData);
+        alert('Resep berhasil diperbarui!');
+      } else {
+        await addDoc(collection(db, 'recipes'), {
+          ...recipeData,
+          rating: 5,
+          reviewCount: 0,
+          createdBy: profile?.uid || 'admin',
+          createdAt: serverTimestamp(),
+        });
+        alert('Resep berhasil ditambahkan!');
+      }
       
       // Reset Form
-      setTitle('');
-      setDescription('');
-      setCoverImage('');
-      setIngredients(['']);
-      setInstructions([{ step: 1, text: '', image: '' }]);
-      setCondition('');
-      setNutrition({ calories: '', protein: '', fat: '', carbs: '' });
-      
-      alert('Resep berhasil ditambahkan!');
+      resetForm();
       fetchData();
       setActiveTab('list');
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'recipes');
+      handleFirestoreError(error, editingRecipeId ? OperationType.UPDATE : OperationType.CREATE, 'recipes');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const resetForm = () => {
+    setEditingRecipeId(null);
+    setTitle('');
+    setDescription('');
+    setCoverImage('');
+    setIngredients(['']);
+    setInstructions([{ step: 1, text: '', image: '' }]);
+    setCondition('');
+    setNutrition({ calories: '', protein: '', fat: '', carbs: '' });
+    setPrepTime('');
+    setServings('');
+    setMealTime('pagi');
+  };
+
+  const handleEditClick = (recipe: Recipe) => {
+    setEditingRecipeId(recipe.id);
+    setTitle(recipe.title);
+    setDescription(recipe.description);
+    setCoverImage(recipe.coverImage);
+    setMealTime(recipe.mealTime as any);
+    setCondition(recipe.condition || '');
+    setIngredients(recipe.ingredients.length > 0 ? recipe.ingredients : ['']);
+    setInstructions(recipe.instructions.length > 0 ? recipe.instructions : [{ step: 1, text: '', image: '' }]);
+    setNutrition(recipe.nutrition || { calories: '', protein: '', fat: '', carbs: '' });
+    setPrepTime(recipe.prepTime || '');
+    setServings(recipe.servings || '');
+    setActiveTab('add');
   };
 
   const handleDeleteRecipe = async (id: string) => {
@@ -151,9 +186,9 @@ export default function AdminDashboard() {
         </div>
         
         <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100 gap-1">
-            <TabBtn active={activeTab === 'add'} onClick={() => setActiveTab('add')} label="Tambah" />
-            <TabBtn active={activeTab === 'list'} onClick={() => setActiveTab('list')} label="Resep" />
-            <TabBtn active={activeTab === 'suggestions'} onClick={() => setActiveTab('suggestions')} label="Saran" />
+            <TabBtn active={activeTab === 'add'} onClick={() => { if(!editingRecipeId) resetForm(); setActiveTab('add'); }} label={editingRecipeId ? "Edit" : "Tambah"} />
+            <TabBtn active={activeTab === 'list'} onClick={() => { resetForm(); setActiveTab('list'); }} label="Resep" />
+            <TabBtn active={activeTab === 'suggestions'} onClick={() => { resetForm(); setActiveTab('suggestions'); }} label="Saran" />
         </div>
       </div>
 
@@ -166,8 +201,14 @@ export default function AdminDashboard() {
             exit={{ opacity: 0, y: -20 }}
             className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100"
           >
-            <form onSubmit={handleAddRecipe} className="space-y-12">
+            <form onSubmit={handleSaveRecipe} className="space-y-12">
               {/* Basic Info */}
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-serif font-bold text-gray-900">{editingRecipeId ? 'Perbarui Resep' : 'Buat Resep Baru'}</h2>
+                {editingRecipeId && (
+                  <button type="button" onClick={resetForm} className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-orange-600 transition-colors">Batal Edit</button>
+                )}
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div className="space-y-6">
                   <FormInput label="Judul Resep" value={title} onChange={setTitle} placeholder="Contoh: Bubur Ayam Jahe" required />
@@ -185,13 +226,17 @@ export default function AdminDashboard() {
                     </select>
                   </div>
                 </div>
-                  <div className="space-y-6">
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Gambar Sampul</label>
-                      <ImageUpload value={coverImage} onChange={setCoverImage} folder="recipes" />
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Gambar Sampul</label>
+                        <ImageUpload value={coverImage} onChange={setCoverImage} folder="recipes" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormInput label="Waktu Masak" value={prepTime} onChange={setPrepTime} placeholder="Contoh: 30 Mnt" />
+                        <FormInput label="Porsi" value={servings} onChange={setServings} placeholder="Contoh: 2-4 Org" />
+                      </div>
+                      <FormInput label="Kategori Kondisi" value={condition} onChange={setCondition} placeholder="Contoh: Maag Safe" />
                     </div>
-                    <FormInput label="Kategori Kondisi" value={condition} onChange={setCondition} placeholder="Contoh: Maag Safe" />
-                  </div>
               </div>
 
               {/* Nutrition */}
@@ -288,6 +333,22 @@ export default function AdminDashboard() {
                               folder="instructions"
                               compact
                             />
+                            
+                            <div className="pt-2">
+                              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 mb-3">Timer (Menit)</label>
+                              <div className="flex items-center gap-3">
+                                <input 
+                                  type="number"
+                                  value={step.duration || ''}
+                                  onChange={(e) => handleInstructionChange(i, 'duration', parseInt(e.target.value) || 0)}
+                                  placeholder="0"
+                                  min="0"
+                                  className="w-20 bg-white border border-gray-100 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-orange-100 outline-none transition-all"
+                                />
+                                <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Menit</span>
+                              </div>
+                              <p className="text-[9px] text-gray-400 mt-2 italic">*Kosongkan jika tidak butuh timer</p>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -319,14 +380,19 @@ export default function AdminDashboard() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {recipes.map((recipe) => (
-              <div key={recipe.id} className="bg-white p-4 rounded-2xl border border-gray-100 flex gap-4 items-center shadow-sm hover:border-orange-200 transition-colors">
-                <img src={recipe.coverImage} className="w-20 h-20 rounded-xl object-cover grayscale brightness-95" />
+              <div key={recipe.id} className="bg-white p-4 rounded-2xl border border-gray-100 flex gap-4 items-center shadow-sm hover:border-orange-200 transition-colors group">
+                <img src={recipe.coverImage} className="w-20 h-20 rounded-xl object-cover grayscale brightness-95 group-hover:grayscale-0 transition-all duration-500" />
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-gray-900 mb-1 truncate text-sm">{recipe.title}</h4>
                   <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-3">{recipe.mealTime}</p>
-                  <button onClick={() => handleDeleteRecipe(recipe.id)} className="text-[10px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest transition-colors">
-                      Hapus
-                  </button>
+                  <div className="flex gap-4">
+                    <button onClick={() => handleEditClick(recipe)} className="text-[10px] font-bold text-orange-600 hover:text-orange-700 uppercase tracking-widest transition-colors">
+                        Edit
+                    </button>
+                    <button onClick={() => handleDeleteRecipe(recipe.id)} className="text-[10px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest transition-colors">
+                        Hapus
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

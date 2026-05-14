@@ -18,6 +18,7 @@ export interface InstructionStep {
   step: number;
   text: string;
   image?: string;
+  duration?: number; // in minutes
 }
 
 export interface Recipe {
@@ -32,6 +33,8 @@ export interface Recipe {
   instructions: InstructionStep[];
   rating: number;
   reviewCount: number;
+  prepTime: string;
+  servings: string;
   createdBy: string;
   createdAt: string;
 }

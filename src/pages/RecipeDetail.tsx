@@ -10,10 +10,11 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { motion } from 'motion/react';
 import { 
-  ChevronLeft, Clock, Users, Star, ChefHat, 
+  ChevronLeft, ChevronRight, Clock, Users, Star, ChefHat, 
   Flame, Salad, Droplets, Beef, Send,
-  MessageCircle, Info
+  MessageCircle, Info, Timer
 } from 'lucide-react';
+import CookingTimer from '../components/CookingTimer';
 import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../lib/utils';
 
@@ -105,7 +106,8 @@ export default function RecipeDetail() {
   if (!recipe) return <div className="text-center py-20">Resep tidak ditemukan.</div>;
 
   return (
-    <div className="bg-[#FAFAF8] min-h-screen pb-20">
+    <div className="bg-[#FAFAF8] min-h-screen pb-20 relative">
+      <CookingTimer />
       {/* Hero Section */}
       <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
         <motion.img 
@@ -163,14 +165,14 @@ export default function RecipeDetail() {
                         <span className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Waktu</span>
                         <div className="flex items-center gap-1.5 text-gray-700">
                             <Clock size={12} />
-                            <span className="text-xs font-bold">30 Mnt</span>
+                            <span className="text-xs font-bold">{recipe.prepTime || '30 Mnt'}</span>
                         </div>
                     </div>
                     <div className="flex flex-col gap-1">
                         <span className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Porsi</span>
                         <div className="flex items-center gap-1.5 text-gray-700">
                             <Users size={12} />
-                            <span className="text-xs font-bold">2-3 Org</span>
+                            <span className="text-xs font-bold">{recipe.servings || '2-3 Org'}</span>
                         </div>
                     </div>
                 </div>
@@ -211,53 +213,88 @@ export default function RecipeDetail() {
             <div className="md:col-span-8 lg:col-span-9">
               <h3 className="text-[11px] uppercase tracking-widest font-bold text-gray-400 mb-6 px-1">Step-by-Step Pembuatan</h3>
               
-              <Swiper
-                modules={[Navigation, Pagination]}
-                navigation
-                pagination={{ clickable: true }}
-                className="rounded-3xl bg-gray-50 border border-gray-100 overflow-hidden"
-              >
-                {recipe.instructions.map((step, idx) => (
-                  <SwiperSlide key={idx} className="p-8 md:p-16 pb-24">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
-                      <div className="order-2 lg:order-1">
-                        <div className="flex items-center gap-4 mb-8">
-                          <div className="w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center text-lg font-black shadow-lg">
-                            {idx + 1}
+              <div className="relative group/swiper">
+                <Swiper
+                  modules={[Navigation, Pagination]}
+                  navigation={{
+                    prevEl: '.swiper-nav-prev',
+                    nextEl: '.swiper-nav-next',
+                  }}
+                  pagination={{ clickable: true }}
+                  autoHeight={true}
+                  className="rounded-3xl bg-gray-50 border border-gray-100 overflow-hidden"
+                >
+                  {recipe.instructions.map((step, idx) => (
+                    <SwiperSlide key={idx} className="p-8 md:p-12 pb-20">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start max-w-5xl mx-auto">
+                        <div className="order-2 lg:order-1 pt-4">
+                          <div className="flex items-center gap-4 mb-6">
+                            <div className="w-10 h-10 bg-gray-900 text-white rounded-xl flex items-center justify-center text-sm font-black shadow-lg">
+                              {idx + 1}
+                            </div>
+                            <span className="text-[9px] font-bold text-orange-600 uppercase tracking-[0.3em]">Langkah Persiapan</span>
                           </div>
-                          <span className="text-[10px] font-bold text-orange-600 uppercase tracking-[0.3em]">Langkah Persiapan</span>
+                          
+                          <div className="prose prose-orange max-w-none">
+                             <p className="text-gray-800 text-base md:text-lg font-medium leading-relaxed">
+                              {step.text}
+                            </p>
+                          </div>
+
+                          {step.duration && step.duration > 0 && (
+                            <motion.button 
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => {
+                                window.dispatchEvent(new CustomEvent('start-cooking-timer', { 
+                                  detail: { duration: step.duration } 
+                                }));
+                              }}
+                              className="mt-6 flex items-center gap-3 bg-orange-50 text-orange-600 px-5 py-3 rounded-2xl hover:bg-orange-600 hover:text-white transition-all shadow-sm border border-orange-100 group/timer"
+                            >
+                              <Timer size={18} className="group-hover/timer:animate-pulse" />
+                              <div className="text-left">
+                                <p className="text-[10px] font-bold uppercase tracking-widest leading-none mb-1">Mulai Hitung Mundur</p>
+                                <p className="text-xs font-black tracking-tight">{step.duration} MENIT</p>
+                              </div>
+                            </motion.button>
+                          )}
+                          
+                          <div className="mt-8 flex items-center gap-3 text-gray-400">
+                            <Info size={14} />
+                            <span className="text-[9px] font-bold uppercase tracking-widest">Pastikan bahan sudah dicuci bersih</span>
+                          </div>
                         </div>
                         
-                        <div className="prose prose-orange max-w-none">
-                           <p className="text-gray-800 text-lg md:text-xl font-medium leading-relaxed">
-                            {step.text}
-                          </p>
-                        </div>
-                        
-                        <div className="mt-10 flex items-center gap-3 text-gray-400">
-                          <Info size={16} />
-                          <span className="text-[10px] font-bold uppercase tracking-widest">Pastikan bahan sudah dicuci bersih</span>
-                        </div>
+                        {step.image ? (
+                          <div className="order-1 lg:order-2 w-full aspect-video lg:aspect-[4/3] rounded-3xl overflow-hidden shadow-xl border-4 border-white">
+                            <img 
+                              src={step.image} 
+                              alt={`Langkah ${step.step}`} 
+                              className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" 
+                            />
+                          </div>
+                        ) : (
+                          <div className="order-1 lg:order-2 w-full aspect-video lg:aspect-[4/3] bg-gray-100 rounded-3xl flex flex-col items-center justify-center border-2 border-dashed border-gray-200">
+                            <ChefHat size={32} className="text-gray-200 mb-2" />
+                            <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Visual tidak tersedia</p>
+                          </div>
+                        )}
                       </div>
-                      
-                      {step.image ? (
-                        <div className="order-1 lg:order-2 w-full aspect-[4/3] rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white">
-                          <img 
-                            src={step.image} 
-                            alt={`Langkah ${step.step}`} 
-                            className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" 
-                          />
-                        </div>
-                      ) : (
-                        <div className="order-1 lg:order-2 w-full aspect-[4/3] bg-gray-100 rounded-[2.5rem] flex flex-col items-center justify-center border-2 border-dashed border-gray-200">
-                          <ChefHat size={48} className="text-gray-200 mb-4" />
-                          <p className="text-xs font-bold text-gray-300 uppercase tracking-widest">Visual tidak tersedia</p>
-                        </div>
-                      )}
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+
+                {/* Custom Navigation Buttons - Positioned at bottom center flanking pagination */}
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-24 md:gap-32 z-10 pointer-events-none">
+                  <button className="swiper-nav-prev pointer-events-auto w-8 h-8 md:w-10 md:h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-orange-600 hover:bg-orange-600 hover:text-white transition-all duration-300 disabled:opacity-0 cursor-pointer">
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button className="swiper-nav-next pointer-events-auto w-8 h-8 md:w-10 md:h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-orange-600 hover:bg-orange-600 hover:text-white transition-all duration-300 disabled:opacity-0 cursor-pointer">
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+              </div>
               
               <div className="mt-8 flex items-center justify-center gap-4 py-4 border-t border-gray-100">
                 <div className="w-12 h-1 bg-orange-600 rounded-full"></div>
