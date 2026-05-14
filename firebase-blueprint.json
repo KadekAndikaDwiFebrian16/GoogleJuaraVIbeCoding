@@ -1,0 +1,122 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Recipe": {
+      "title": "Recipe",
+      "description": "Full recipe details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "coverImage": { "type": "string" },
+        "mealTime": { "type": "string", "enum": ["pagi", "siang", "sore"] },
+        "condition": { "type": "string", "description": "e.g. maag, diabetes, etc." },
+        "nutrition": {
+          "type": "object",
+          "properties": {
+            "calories": { "type": "string" },
+            "protein": { "type": "string" },
+            "fat": { "type": "string" },
+            "carbs": { "type": "string" }
+          }
+        },
+        "ingredients": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "instructions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "step": { "type": "number" },
+              "text": { "type": "string" },
+              "image": { "type": "string" }
+            }
+          }
+        },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "description", "mealTime", "ingredients", "instructions"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "User comment and rating",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "recipeId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhoto": { "type": "string" },
+        "text": { "type": "string" },
+        "rating": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["recipeId", "userId", "text", "rating"]
+    },
+    "Suggestion": {
+      "title": "Suggestion",
+      "description": "User recipe suggestion to admin",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "ingredients": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "reviewed", "added"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title"]
+    },
+    "AdminAccount": {
+      "title": "Admin",
+      "description": "Admin accounts records",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "recipes": {
+      "schema": "Recipe",
+      "description": "Cooking recipes"
+    },
+    "recipes/{recipeId}/comments": {
+      "schema": "Comment",
+      "description": "Recipe reviews"
+    },
+    "suggestions": {
+      "schema": "Suggestion",
+      "description": "Recipe suggestions from users"
+    },
+    "admins": {
+        "schema": "AdminAccount",
+        "description": "List of admin UIDs"
+    }
+  }
+}

@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Catch-all safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'febriandwiiiii@gmail.com' && request.auth.token.email_verified == true) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- Collection: Users ---
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId);
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidId(userId) &&
+                      request.resource.data.keys().hasAll(['uid', 'email', 'role', 'createdAt']) &&
+                      (request.resource.data.role == 'user' || request.resource.data.email == 'febriandwiiiii@gmail.com');
+      allow update: if isOwner(userId) && isValidId(userId) &&
+                      (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'role']) &&
+                       (request.resource.data.role == 'user' || request.resource.data.email == 'febriandwiiiii@gmail.com'));
+      allow delete: if isAdmin() && isValidId(userId);
+    }
+
+    // --- Collection: Recipes ---
+    match /recipes/{recipeId} {
+      function isValidRecipe(data) {
+        return data.title is string && data.title.size() <= 100 &&
+               data.description is string && data.description.size() <= 1000 &&
+               data.mealTime in ['pagi', 'siang', 'sore'] &&
+               data.ingredients is list && data.instructions is list;
+      }
+
+      allow list: if true;
+      allow get: if isValidId(recipeId);
+      allow create: if isAdmin() && isValidRecipe(request.resource.data);
+      allow update: if (isAdmin() && isValidRecipe(request.resource.data)) || 
+                      (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rating', 'reviewCount']));
+      allow delete: if isAdmin() && isValidId(recipeId);
+
+      // Sub-collection: Comments
+      match /comments/{commentId} {
+        function isValidComment(data) {
+          return data.text is string && data.text.size() <= 1000 &&
+                 data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+                 data.userId == request.auth.uid;
+        }
+        
+        allow list: if true;
+        allow get: if isValidId(commentId);
+        allow create: if isEmailVerified() && isValidComment(request.resource.data);
+        allow update, delete: if (isSignedIn() && (isOwner(resource.data.userId) || isAdmin())) && isValidId(commentId);
+      }
+    }
+
+    // --- Collection: Suggestions ---
+    match /suggestions/{suggestionId} {
+      function isValidSuggestion(data) {
+        return data.title is string && data.title.size() <= 100 &&
+               data.userId == request.auth.uid;
+      }
+      
+      allow read: if isAdmin() && isValidId(suggestionId);
+      allow list: if isAdmin();
+      allow create: if isEmailVerified() && isValidSuggestion(request.resource.data);
+      allow delete: if isAdmin() && isValidId(suggestionId);
+    }
+  }
+}
