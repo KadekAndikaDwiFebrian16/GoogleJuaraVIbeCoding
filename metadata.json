@@ -2,5 +2,5 @@
   "name": "Dapursehat",
   "description": "Aplikasi resep makanan pintar dengan gizi lengkap, kategori makan sehat, dan asisten AI untuk membantu Anda memasak.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

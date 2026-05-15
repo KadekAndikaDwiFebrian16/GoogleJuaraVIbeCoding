@@ -29,6 +29,14 @@ export default function AdminDashboard() {
   const [instructions, setInstructions] = useState<InstructionStep[]>([{ step: 1, text: '', image: '' }]);
   const [submitting, setSubmitting] = useState(false);
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notifMessage, setNotifMessage] = useState('');
+
+  const triggerNotification = (msg: string) => {
+    setNotifMessage(msg);
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 3000);
+  };
 
   useEffect(() => {
     if (profile?.role === 'admin') {
@@ -95,7 +103,7 @@ export default function AdminDashboard() {
 
       if (editingRecipeId) {
         await updateDoc(doc(db, 'recipes', editingRecipeId), recipeData);
-        alert('Resep berhasil diperbarui!');
+        triggerNotification('Resep Berhasil Diperbarui!');
       } else {
         await addDoc(collection(db, 'recipes'), {
           ...recipeData,
@@ -104,7 +112,7 @@ export default function AdminDashboard() {
           createdBy: profile?.uid || 'admin',
           createdAt: serverTimestamp(),
         });
-        alert('Resep berhasil ditambahkan!');
+        triggerNotification('Resep Baru Telah Terbit!');
       }
       
       // Reset Form
@@ -178,14 +186,58 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12 font-sans min-h-screen">
+    <div className="max-w-6xl mx-auto px-4 py-12 font-sans min-h-screen relative">
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {showNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+            className="fixed bottom-10 right-4 md:right-10 z-[100] pointer-events-none"
+          >
+            <div className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.1)] p-5 rounded-[2rem] flex items-center gap-4 min-w-[300px] overflow-hidden relative group">
+              <div className="absolute top-0 left-0 w-full h-[2px] bg-orange-100/30 overflow-hidden">
+                <motion.div 
+                  initial={{ x: '-100%' }}
+                  animate={{ x: '100%' }}
+                  transition={{ duration: 3, ease: "linear" }}
+                  className="w-full h-full bg-gradient-to-r from-transparent via-orange-500 to-transparent"
+                />
+              </div>
+
+              <div className="w-12 h-12 bg-orange-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-orange-200">
+                <ChefHat size={24} />
+              </div>
+
+              <div>
+                <h4 className="text-gray-900 font-bold text-sm tracking-tight">{notifMessage}</h4>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Berhasil diproses ke sistem</p>
+              </div>
+
+              <div className="ml-auto bg-green-50 text-green-600 p-2 rounded-xl">
+                <Save size={16} />
+              </div>
+
+              <motion.div 
+                className="absolute -right-4 -bottom-4 opacity-10 text-orange-500 pointer-events-none"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+              >
+                <ChefHat size={80} />
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
         <div>
            <h1 className="text-4xl font-serif font-bold text-gray-900 mb-2 tracking-tight">Admin Console</h1>
            <p className="text-gray-500 text-sm font-medium">Manage your kitchen operations and community feedback.</p>
         </div>
         
-        <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100 gap-1">
+        <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100 gap-1 items-center">
             <TabBtn active={activeTab === 'add'} onClick={() => { if(!editingRecipeId) resetForm(); setActiveTab('add'); }} label={editingRecipeId ? "Edit" : "Tambah"} />
             <TabBtn active={activeTab === 'list'} onClick={() => { resetForm(); setActiveTab('list'); }} label="Resep" />
             <TabBtn active={activeTab === 'suggestions'} onClick={() => { resetForm(); setActiveTab('suggestions'); }} label="Saran" />

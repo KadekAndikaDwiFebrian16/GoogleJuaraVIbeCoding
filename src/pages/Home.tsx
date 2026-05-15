@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { collection, query, getDocs, orderBy } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Recipe } from '../types';
@@ -60,23 +60,27 @@ export default function Home() {
     }
   };
 
-  const filteredRecipes = recipes.filter(recipe => {
-    const matchesSearch = recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         recipe.ingredients.some(ing => ing.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesCategory = selectedCategory === 'semua' || recipe.mealTime === selectedCategory;
-    const matchesCondition = !selectedCondition || recipe.condition?.toLowerCase() === selectedCondition.toLowerCase();
-    
-    return matchesSearch && matchesCategory && matchesCondition;
-  });
+  const filteredRecipes = useMemo(() => {
+    return recipes.filter(recipe => {
+      const matchesSearch = recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           recipe.ingredients.some(ing => ing.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesCategory = selectedCategory === 'semua' || recipe.mealTime === selectedCategory;
+      const matchesCondition = !selectedCondition || recipe.condition?.toLowerCase() === selectedCondition.toLowerCase();
+      
+      return matchesSearch && matchesCategory && matchesCondition;
+    });
+  }, [recipes, searchTerm, selectedCategory, selectedCondition]);
 
-  const totalReviews = recipes.reduce((acc, recipe) => acc + (recipe.reviewCount || 0), 0);
+  const totalReviews = useMemo(() => {
+    return recipes.reduce((acc, recipe) => acc + (recipe.reviewCount || 0), 0);
+  }, [recipes]);
 
   return (
     <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)] overflow-hidden relative">
       <button 
         onClick={() => setIsFilterOpen(!isFilterOpen)}
-        className="md:hidden fixed bottom-6 right-6 z-40 bg-orange-600 text-white p-4 rounded-full shadow-xl flex items-center gap-2 font-bold active:scale-95 transition-all"
+        className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-orange-600 text-white px-6 py-3.5 rounded-full shadow-xl flex items-center gap-2 font-bold active:scale-95 transition-all"
       >
         {isFilterOpen ? <CloseIcon size={20} /> : <Filter size={20} />}
         <span className="text-sm">Filter</span>

@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+import "dotenv/config";
 
 async function startServer() {
   const app = express();
@@ -14,12 +15,21 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  const ai = new GoogleGenAI({ 
+    apiKey: process.env.GEMINI_API_KEY,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      }
+    }
+  });
+
   app.post("/api/chat", async (req, res) => {
     try {
       const { question, context } = req.body;
-      const ai = new GoogleGenAI({ apiKey: process.env.MY_CUSTOM_API_KEY || process.env.GEMINI_API_KEY });
+      
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3-flash-preview",
         contents: question,
         config: {
           systemInstruction: `Anda adalah asisten masak pintar bernama 'Chef AI' untuk aplikasi 'Dapursehat'. 
@@ -30,6 +40,7 @@ async function startServer() {
           ${context ? `Konteks saat ini: ${context}` : ''}`,
         },
       });
+
       res.json({ text: response.text });
     } catch (error: any) {
       console.error("AI Assistant Error:", error);

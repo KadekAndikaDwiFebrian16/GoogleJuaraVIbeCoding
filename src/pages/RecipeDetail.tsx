@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, getDoc, collection, query, getDocs, addDoc, serverTimestamp, orderBy, updateDoc, increment } from 'firebase/firestore';
+import { doc, getDoc, collection, query, getDocs, addDoc, serverTimestamp, orderBy, updateDoc, increment, deleteDoc } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Recipe, Comment, Nutrition } from '../types';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -8,11 +8,11 @@ import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronLeft, ChevronRight, Clock, Users, Star, ChefHat, 
   Flame, Salad, Droplets, Beef, Send,
-  MessageCircle, Info, Timer
+  MessageCircle, Info, Timer, Trash2
 } from 'lucide-react';
 import CookingTimer from '../components/CookingTimer';
 import { useAuth } from '../context/AuthContext';
@@ -57,7 +57,14 @@ export default function RecipeDetail() {
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile || !commentText.trim()) return;
+    if (!profile) {
+      alert('Silakan login terlebih dahulu untuk memberikan ulasan.');
+      return;
+    }
+    if (!commentText.trim()) {
+      alert('Komentar tidak boleh kosong.');
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -68,7 +75,6 @@ export default function RecipeDetail() {
         userPhoto: profile.photoURL,
         text: commentText,
         rating: rating,
-        createdAt: new Date().toISOString(),
       };
 
       await addDoc(collection(db, 'recipes', id!, 'comments'), {
@@ -76,22 +82,43 @@ export default function RecipeDetail() {
         createdAt: serverTimestamp()
       });
 
-      // Update recipe rating average (simplified)
-      const newReviewCount = (recipe?.reviewCount || 0) + 1;
-      const newRating = ((recipe?.rating || 0) * (recipe?.reviewCount || 0) + rating) / newReviewCount;
+      // Update recipe rating average
+      const currentReviewCount = recipe?.reviewCount || 0;
+      const currentRating = recipe?.rating || 0;
+      const newReviewCount = currentReviewCount + 1;
+      const newRating = ((currentRating * currentReviewCount) + rating) / newReviewCount;
       
-      await updateDoc(doc(db, 'recipes', id!), {
-        rating: newRating,
-        reviewCount: increment(1)
-      });
+      try {
+        await updateDoc(doc(db, 'recipes', id!), {
+          rating: Number(newRating.toFixed(1)),
+          reviewCount: increment(1)
+        });
+      } catch (updateError) {
+        console.warn("Failed to update recipe totals, but comment was added:", updateError);
+      }
 
       setCommentText('');
       setRating(5);
       fetchRecipeData();
+      alert('Ulasan Anda berhasil dikirim!');
     } catch (error) {
+      console.error(error);
+      alert('Gagal mengirim ulasan. Pastikan Anda sudah login.');
       handleFirestoreError(error, OperationType.CREATE, `recipes/${id}/comments`);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!profile || !id) return;
+    
+    // Simpler check or just execute if confirm is problematic in this env
+    try {
+      await deleteDoc(doc(db, 'recipes', id, 'comments', commentId));
+      setComments(prev => prev.filter(c => c.id !== commentId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `recipes/${id}/comments/${commentId}`);
     }
   };
 
@@ -378,9 +405,20 @@ export default function RecipeDetail() {
                                                 <h4 className="font-bold text-gray-900 text-sm tracking-tight">{comment.userName}</h4>
                                                 <p className="text-[10px] text-gray-400 font-bold uppercase">{formatDate(comment.createdAt)}</p>
                                             </div>
-                                            <div className="flex items-center gap-1 text-orange-500 px-2 py-0.5 rounded-lg border border-orange-100 bg-orange-50">
-                                                <Star size={10} fill="currentColor" />
-                                                <span className="text-[10px] font-bold">{comment.rating}</span>
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-1 text-orange-500 px-2 py-0.5 rounded-lg border border-orange-100 bg-orange-50">
+                                                    <Star size={10} fill="currentColor" />
+                                                    <span className="text-[10px] font-bold">{comment.rating}</span>
+                                                </div>
+                                                {(profile?.uid === comment.userId || profile?.role === 'admin') && (
+                                                    <button 
+                                                        onClick={() => handleDeleteComment(comment.id)}
+                                                        className="text-gray-300 hover:text-red-500 transition-colors p-1"
+                                                        title="Hapus Komentar"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                         <p className="text-gray-600 text-sm leading-relaxed">

@@ -36,7 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           if (isAdminEmail && data.role !== 'admin') {
             // Promote to admin if not already
-            await setDoc(userDocRef, { ...data, role: 'admin' }, { merge: true });
+            await setDoc(userDocRef, { role: 'admin' }, { merge: true });
             setProfile({ ...data, role: 'admin' });
           } else {
             setProfile(data);
