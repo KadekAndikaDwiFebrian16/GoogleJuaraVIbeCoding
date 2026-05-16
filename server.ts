@@ -10,11 +10,12 @@ async function startServer() {
 
   app.use(express.json());
 
-  // API routes FIRST
+  // API routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
   });
 
+  // Initialize AI client
   const ai = new GoogleGenAI({ 
     apiKey: process.env.GEMINI_API_KEY,
     httpOptions: {

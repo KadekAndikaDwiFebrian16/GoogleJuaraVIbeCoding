@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageCircle, X, Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
+import { X, Send, Bot, Loader2, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { askAssistant } from '../services/aiService';
-import { useAuth } from '../context/AuthContext';
 
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);

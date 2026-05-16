@@ -8,7 +8,7 @@ import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { 
   ChevronLeft, ChevronRight, Clock, Users, Star, ChefHat, 
   Flame, Salad, Droplets, Beef, Send,
