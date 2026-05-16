@@ -16,21 +16,30 @@ async function startServer() {
   });
 
   // Initialize AI client
-  const ai = new GoogleGenAI({ 
-    apiKey: process.env.GEMINI_API_KEY,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
+  let genAI: GoogleGenAI | null = null;
+  const getGenAI = () => {
+    if (!genAI) {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error("GEMINI_API_KEY is not defined");
       }
+      genAI = new GoogleGenAI({ 
+        apiKey,
+        httpOptions: {
+          headers: { 'User-Agent': 'aistudio-build' }
+        }
+      });
     }
-  });
+    return genAI;
+  };
 
   app.post("/api/chat", async (req, res) => {
     try {
       const { question, context } = req.body;
+      const ai = getGenAI();
       
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash",
         contents: question,
         config: {
           systemInstruction: `Anda adalah asisten masak pintar bernama 'Chef AI' untuk aplikasi 'Dapursehat'. 
