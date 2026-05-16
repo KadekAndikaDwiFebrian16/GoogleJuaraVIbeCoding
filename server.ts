@@ -35,26 +35,39 @@ async function startServer() {
 
   app.post("/api/chat", async (req, res) => {
     try {
-      const { question, context } = req.body;
+      const { question, user_lat, user_lng } = req.body;
       const ai = getGenAI();
       
+      const systemInstruction = `Anda adalah Chef AI untuk aplikasi 'Dapursehat'.
+Tugas Anda adalah membantu user dengan memberikan resep makanan sehat, tips memasak, dan informasi nilai gizi secara detail dan ramah.
+Jangan pernah memberikan informasi yang membahayakan kesehatan. Berikan takaran bahan yang akurat dan langkah-langkah yang mudah diikuti.`;
+
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-flash-latest",
         contents: question,
         config: {
-          systemInstruction: `Anda adalah asisten masak pintar bernama 'Chef AI' untuk aplikasi 'Dapursehat'. 
-          Tugas Anda adalah membantu pengguna menjawab pertanyaan seputar resep, gizi, tips memasak, dan saran makanan sehat. 
-          Berikan jawaban yang ramah, informatif, dan praktis dalam Bahasa Indonesia.
-          Gunakan format Markdown yang bersih dan rapi. Hindari penggunaan tanda bintang (bold) atau tagar (heading) yang berlebihan. 
-          Gunakan poin-poin (bullet points) jika menjelaskan daftar.
-          ${context ? `Konteks saat ini: ${context}` : ''}`,
+          systemInstruction: systemInstruction,
         },
       });
 
-      res.json({ text: response.text });
+      const resultText = response.text;
+      res.json({ text: resultText });
     } catch (error: any) {
       console.error("AI Assistant Error:", error);
-      res.status(500).json({ error: error.message || "Kendala teknis" });
+      
+      let userFriendlyMessage = "Maaf, sistem AI sedang mengalami gangguan teknis. Mohon coba lagi beberapa saat lagi.";
+      
+      if (error?.message?.includes("RESOURCE_EXHAUSTED") || error?.status === "RESOURCE_EXHAUSTED" || error?.status === 429) {
+        userFriendlyMessage = "Maaf, kuota harian AI gratis (Gemini Flash) sedang habis (20 req/hari). Silakan coba lagi besok atau gunakan API Key berbayar di menu Settings > Secrets! 🙏";
+      } else if (error?.status === 404 || error?.message?.includes("NOT_FOUND") || error?.message?.includes("not found")) {
+        userFriendlyMessage = "Maaf, model AI terpilih sedang tidak tersedia. Kami akan mencoba model alternatif. Mohon coba kirim pesan sekali lagi.";
+      }
+
+      res.status(500).json({ 
+        status: "error", 
+        ui_message: userFriendlyMessage,
+        error: error.message || "Kendala teknis" 
+      });
     }
   });
 

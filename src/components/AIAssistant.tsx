@@ -4,10 +4,15 @@ import { X, Send, Bot, Loader2, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { askAssistant } from '../services/aiService';
 
+interface Message {
+  role: 'ai' | 'user';
+  text: string;
+}
+
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{ role: 'ai' | 'user'; text: string }[]>([
-    { role: 'ai', text: 'Halo! Saya Chef AI. Ada yang bisa saya bantu hari ini? Tanyakan apa saja seputar resep atau gizi!' }
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'ai', text: 'Halo! Saya Chef AI. Ada yang bisa saya bantu hari ini? Tanyakan apa saja seputar resep, tips dapur, atau informasi gizi makanan sehat!' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,10 +36,10 @@ export default function AIAssistant() {
     setLoading(true);
 
     try {
-      const response = await askAssistant(userMsg);
-      setMessages(prev => [...prev, { role: 'ai', text: response }]);
+      const responseText = await askAssistant(userMsg);
+      setMessages(prev => [...prev, { role: 'ai', text: responseText }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'ai', text: 'Maaf, saya sedang sibuk. Coba lagi nanti ya!' }]);
+      setMessages(prev => [...prev, { role: 'ai', text: 'Maaf, saya sedang mengalami kendala teknis. Coba lagi nanti ya!' }]);
     } finally {
       setLoading(false);
     }
@@ -42,14 +47,21 @@ export default function AIAssistant() {
 
   return (
     <>
-      {/* Floating Button */}
-      <button 
+      <motion.button 
+        initial={{ scale: 0, rotate: -20 }}
+        animate={{ scale: 1, rotate: 0 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-gray-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all z-[60] group"
+        className="fixed bottom-6 right-6 w-16 h-16 bg-gray-900 text-white rounded-full flex items-center justify-center shadow-2xl z-[60] group border-4 border-white"
       >
-        <Sparkles size={24} className="group-hover:rotate-12 transition-transform" />
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full border-2 border-[#FAFAF8]" />
-      </button>
+        <Sparkles size={28} className="group-hover:rotate-12 transition-transform text-orange-400" />
+        <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-600 rounded-full border-2 border-white animate-pulse" />
+        
+        <div className="absolute right-20 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
+          Tanya Chef AI
+        </div>
+      </motion.button>
 
       <AnimatePresence>
         {isOpen && (
@@ -59,18 +71,14 @@ export default function AIAssistant() {
             exit={{ opacity: 0, scale: 0.95, y: 20, x: 20 }}
             className="fixed bottom-6 right-6 w-full max-w-[380px] h-[580px] max-h-[85vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col z-[70] border border-gray-100"
           >
-            {/* Header */}
             <div className="p-5 bg-gray-900 text-white flex items-center justify-between relative overflow-hidden">
-              <div className="absolute -right-4 -top-4 w-16 h-16 bg-white/5 rounded-full"></div>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center text-white shadow-lg">
-                   <Bot size={20} />
+                  <Bot size={20} />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold tracking-tight">AI Nutritionist</h3>
-                  <div className="flex items-center gap-1.5 opacity-80">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400">Powered by Gemini</span>
-                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400 opacity-80">Chef Digital Dapursehat</span>
                 </div>
               </div>
               <button 
@@ -82,7 +90,6 @@ export default function AIAssistant() {
               </button>
             </div>
 
-            {/* Chat Messages */}
             <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#FAFAF8]">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -91,13 +98,9 @@ export default function AIAssistant() {
                     ? 'bg-orange-600 text-white' 
                     : 'bg-white text-gray-800 border border-gray-100'
                   }`}>
-                    {msg.role === 'ai' ? (
-                      <div className="prose prose-sm max-w-none prose-orange prose-p:leading-relaxed prose-li:my-0">
-                        <ReactMarkdown>{msg.text}</ReactMarkdown>
-                      </div>
-                    ) : (
-                      msg.text
-                    )}
+                    <div className="prose prose-sm max-w-none prose-orange prose-p:leading-relaxed prose-li:my-0">
+                      <ReactMarkdown>{msg.text}</ReactMarkdown>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -117,7 +120,7 @@ export default function AIAssistant() {
                       type="text" 
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      placeholder="Tanya Chef AI..."
+                      placeholder="Apa yang ingin Anda masak?"
                       className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-orange-100 outline-none transition-all"
                     />
                     <button 

@@ -1,17 +1,18 @@
-export async function askAssistant(question: string, context?: string) {
+export async function askAssistant(question: string) {
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, context }),
+      body: JSON.stringify({ question }),
     });
-    if (!res.ok) {
-      throw new Error(`Server returned ${res.status}`);
-    }
+    
     const data = await res.json();
-    return data.text;
+    if (!res.ok) {
+      throw new Error(data.ui_message || `Server error: ${res.status}`);
+    }
+    return data.text || "No response tracking.";
   } catch (error) {
     console.error("AI Assistant Error:", error);
-    return "Maaf, saya sedang mengalami kendala teknis. Silakan coba lagi nanti.";
+    throw error;
   }
 }
