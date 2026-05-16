@@ -5,13 +5,7 @@ import { logout } from '../lib/firebase';
 import { LogOut, PlusCircle, ChefHat, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-export default function Navbar({ 
-  openAssistant, 
-  setOpenAssistant 
-}: { 
-  openAssistant: 'chef' | 'sulap' | null, 
-  setOpenAssistant: (a: 'chef' | 'sulap' | null) => void 
-}) {
+export default function Navbar() {
   const { profile, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);

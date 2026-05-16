@@ -11,31 +11,63 @@ export default function CookingTimer() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  const playAlarm = () => {
+  const alarmIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const playSingleBeep = () => {
     try {
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
       const ctx = audioContextRef.current;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+      const t = ctx.currentTime;
+      
+      const playBeep = (timeOffset: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(880, t + timeOffset); // A5
+        gain.gain.setValueAtTime(0, t + timeOffset);
+        gain.gain.linearRampToValueAtTime(0.3, t + timeOffset + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + timeOffset + 0.2);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t + timeOffset);
+        osc.stop(t + timeOffset + 0.2);
+      };
 
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
-
-      gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start();
-      osc.stop(ctx.currentTime + 1);
+      playBeep(0);
+      playBeep(0.25);
     } catch (e) {
       console.error('Audio error:', e);
     }
   };
+
+  const playAlarm = () => {
+    if (alarmIntervalRef.current) return;
+    playSingleBeep();
+    alarmIntervalRef.current = setInterval(() => {
+      playSingleBeep();
+    }, 1000);
+  };
+
+  const stopAlarm = () => {
+    if (alarmIntervalRef.current) {
+      clearInterval(alarmIntervalRef.current);
+      alarmIntervalRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      window.dispatchEvent(new CustomEvent('close-assistant'));
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleCloseTimer = () => setIsOpen(false);
+    window.addEventListener('close-timer', handleCloseTimer);
+    return () => window.removeEventListener('close-timer', handleCloseTimer);
+  }, []);
 
   useEffect(() => {
     const handleStartTimer = (e: any) => {
@@ -72,6 +104,7 @@ export default function CookingTimer() {
     }
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      stopAlarm();
     };
   }, [isActive, minutes, seconds]);
 
@@ -82,6 +115,7 @@ export default function CookingTimer() {
     setIsFinished(false);
     setMinutes(5);
     setSeconds(0);
+    stopAlarm();
   };
 
   const adjustTime = (type: 'min' | 'sec', amount: number) => {
@@ -103,14 +137,14 @@ export default function CookingTimer() {
   };
 
   return (
-    <div className="fixed bottom-6 left-6 z-50">
+    <div className="fixed bottom-6 left-6 z-[120]">
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="bg-white rounded-3xl shadow-2xl p-6 border border-gray-100 mb-4 w-64 overflow-hidden relative"
+            className="absolute bottom-full left-0 mb-4 w-[calc(100vw-48px)] sm:w-64 bg-white rounded-3xl shadow-2xl p-6 border border-gray-100 overflow-hidden"
           >
             {isFinished && (
               <motion.div 
@@ -145,17 +179,26 @@ export default function CookingTimer() {
               </div>
 
               <div className="flex gap-3 w-full">
-                <button
-                  onClick={toggleTimer}
-                  className={`flex-1 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm ${
-                    isActive 
-                      ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' 
-                      : 'bg-orange-600 text-white hover:bg-orange-700 shadow-orange-100'
-                  }`}
-                >
-                  {isActive ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
-                  <span className="text-xs font-bold uppercase tracking-widest">{isActive ? 'Pause' : 'Start'}</span>
-                </button>
+                {isFinished ? (
+                  <button
+                    onClick={resetTimer}
+                    className="flex-1 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm bg-orange-600 text-white hover:bg-orange-700 shadow-orange-100"
+                  >
+                    <span className="text-xs font-bold uppercase tracking-widest">Matikan Alarm</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={toggleTimer}
+                    className={`flex-1 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm ${
+                      isActive 
+                        ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' 
+                        : 'bg-orange-600 text-white hover:bg-orange-700 shadow-orange-100'
+                    }`}
+                  >
+                    {isActive ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
+                    <span className="text-xs font-bold uppercase tracking-widest">{isActive ? 'Pause' : 'Start'}</span>
+                  </button>
+                )}
               </div>
 
               {isFinished && (

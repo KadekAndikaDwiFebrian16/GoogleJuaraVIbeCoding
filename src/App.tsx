@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/Home';
@@ -22,12 +22,24 @@ const ProtectedRoute = ({ children, adminOnly = false }: { children: React.React
 
 function AppContent() {
   const { user } = useAuth();
-  const [openAssistant, setOpenAssistant] = useState<'chef' | 'sulap' | null>(null);
+  const [openAssistant, setOpenAssistant] = React.useState<'chef' | 'sulap' | null>(null);
+
+  React.useEffect(() => {
+    if (openAssistant) {
+      window.dispatchEvent(new CustomEvent('close-timer'));
+    }
+  }, [openAssistant]);
+
+  React.useEffect(() => {
+    const handleCloseAssistant = () => setOpenAssistant(null);
+    window.addEventListener('close-assistant', handleCloseAssistant);
+    return () => window.removeEventListener('close-assistant', handleCloseAssistant);
+  }, []);
 
   return (
     <Router>
       <div className="min-h-screen bg-[#FAFAF8] text-[#2D2D2D] font-sans selection:bg-orange-600 selection:text-white">
-        {user && <Navbar openAssistant={openAssistant} setOpenAssistant={setOpenAssistant} />}
+        {user && <Navbar />}
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
