@@ -26,7 +26,7 @@ export interface Recipe {
   title: string;
   description: string;
   coverImage: string;
-  mealTime: 'pagi' | 'siang' | 'sore';
+  mealTime: 'pagi' | 'siang' | 'sore' | 'malam';
   condition: string;
   nutrition: Nutrition;
   ingredients: string[];

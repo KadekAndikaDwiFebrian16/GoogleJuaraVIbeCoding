@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Timer, Volume2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Play, Pause, RotateCcw, Timer } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function CookingTimer() {
@@ -103,7 +103,7 @@ export default function CookingTimer() {
   };
 
   return (
-    <div className="fixed bottom-8 left-8 z-50">
+    <div className="fixed bottom-6 left-6 z-50">
       <AnimatePresence>
         {isOpen && (
           <motion.div

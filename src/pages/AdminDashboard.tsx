@@ -20,7 +20,7 @@ export default function AdminDashboard() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [coverImage, setCoverImage] = useState('');
-  const [mealTime, setMealTime] = useState<'pagi' | 'siang' | 'sore'>('pagi');
+  const [mealTime, setMealTime] = useState<'pagi' | 'siang' | 'sore' | 'malam'>('pagi');
   const [condition, setCondition] = useState('');
   const [prepTime, setPrepTime] = useState('');
   const [servings, setServings] = useState('');
@@ -140,6 +140,9 @@ export default function AdminDashboard() {
     setMealTime('pagi');
   };
 
+  const [deletingRecipeId, setDeletingRecipeId] = useState<string | null>(null);
+  const [deletingSuggestionId, setDeletingSuggestionId] = useState<string | null>(null);
+
   const handleEditClick = (recipe: Recipe) => {
     setEditingRecipeId(recipe.id);
     setTitle(recipe.title);
@@ -156,13 +159,24 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteRecipe = async (id: string) => {
-    if (window.confirm('Hapus resep ini?')) {
-      try {
-        await deleteDoc(doc(db, 'recipes', id));
-        fetchData();
-      } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, `recipes/${id}`);
-      }
+    try {
+      await deleteDoc(doc(db, 'recipes', id));
+      triggerNotification('Resep berhasil dihapus!');
+      setDeletingRecipeId(null);
+      fetchData();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `recipes/${id}`);
+    }
+  };
+
+  const handleDeleteSuggestion = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'suggestions', id));
+      triggerNotification('Saran berhasil dihapus!');
+      setDeletingSuggestionId(null);
+      fetchData();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `suggestions/${id}`);
     }
   };
 
@@ -231,13 +245,13 @@ export default function AdminDashboard() {
         )}
       </AnimatePresence>
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 md:mb-12 gap-6 md:gap-8">
         <div>
-           <h1 className="text-4xl font-serif font-bold text-gray-900 mb-2 tracking-tight">Admin Console</h1>
+           <h1 className="text-3xl md:text-4xl font-serif font-bold text-gray-900 mb-2 tracking-tight">Admin Console</h1>
            <p className="text-gray-500 text-sm font-medium">Manage your kitchen operations and community feedback.</p>
         </div>
         
-        <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100 gap-1 items-center">
+        <div className="inline-flex bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100 gap-1 self-start md:self-auto overflow-x-auto max-w-full no-scrollbar">
             <TabBtn active={activeTab === 'add'} onClick={() => { if(!editingRecipeId) resetForm(); setActiveTab('add'); }} label={editingRecipeId ? "Edit" : "Tambah"} />
             <TabBtn active={activeTab === 'list'} onClick={() => { resetForm(); setActiveTab('list'); }} label="Resep" />
             <TabBtn active={activeTab === 'suggestions'} onClick={() => { resetForm(); setActiveTab('suggestions'); }} label="Saran" />
@@ -274,7 +288,8 @@ export default function AdminDashboard() {
                     >
                       <option value="pagi">🌅 Pagi</option>
                       <option value="siang">☀️ Siang</option>
-                      <option value="sore">🌙 Sore</option>
+                      <option value="sore">🌇 Sore</option>
+                      <option value="malam">🌙 Malam</option>
                     </select>
                   </div>
                 </div>
@@ -438,12 +453,25 @@ export default function AdminDashboard() {
                   <h4 className="font-bold text-gray-900 mb-1 truncate text-sm">{recipe.title}</h4>
                   <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-3">{recipe.mealTime}</p>
                   <div className="flex gap-4">
-                    <button onClick={() => handleEditClick(recipe)} className="text-[10px] font-bold text-orange-600 hover:text-orange-700 uppercase tracking-widest transition-colors">
-                        Edit
-                    </button>
-                    <button onClick={() => handleDeleteRecipe(recipe.id)} className="text-[10px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest transition-colors">
-                        Hapus
-                    </button>
+                    {deletingRecipeId === recipe.id ? (
+                      <div className="flex gap-3">
+                        <button onClick={() => handleDeleteRecipe(recipe.id)} className="text-[10px] font-bold text-red-500 hover:text-red-700 uppercase tracking-widest transition-colors">
+                            Ya, Hapus
+                        </button>
+                        <button onClick={() => setDeletingRecipeId(null)} className="text-[10px] font-bold text-gray-500 hover:text-gray-700 uppercase tracking-widest transition-colors">
+                            Batal
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <button onClick={() => handleEditClick(recipe)} className="text-[10px] font-bold text-orange-600 hover:text-orange-700 uppercase tracking-widest transition-colors">
+                            Edit
+                        </button>
+                        <button onClick={() => setDeletingRecipeId(recipe.id)} className="text-[10px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest transition-colors">
+                            Hapus
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -465,7 +493,23 @@ export default function AdminDashboard() {
                         <h4 className="text-xl font-serif font-bold text-gray-900 mb-1">{s.title}</h4>
                         <p className="text-[10px] text-gray-400 font-bold uppercase">Dari: {s.userName} • {formatDate(s.createdAt)}</p>
                     </div>
-                    <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">{s.status}</span>
+                    <div className="flex items-center gap-3">
+                        <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest hidden sm:inline-block">{s.status}</span>
+                        {deletingSuggestionId === s.id ? (
+                          <div className="flex bg-red-50 rounded-xl overflow-hidden">
+                            <button onClick={() => handleDeleteSuggestion(s.id)} className="px-3 py-2 text-[10px] font-bold text-red-600 hover:bg-red-100 uppercase tracking-widest transition-colors">
+                              Ya
+                            </button>
+                            <button onClick={() => setDeletingSuggestionId(null)} className="px-3 py-2 text-[10px] font-bold text-gray-500 hover:bg-gray-100 uppercase tracking-widest transition-colors">
+                              Batal
+                            </button>
+                          </div>
+                        ) : (
+                          <button onClick={() => setDeletingSuggestionId(s.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                              <Trash2 size={18} />
+                          </button>
+                        )}
+                    </div>
                 </div>
                 <div className="grid md:grid-cols-2 gap-8">
                     <div>
@@ -591,10 +635,10 @@ function TabBtn({ active, onClick, label }: { active: boolean, onClick: () => vo
       whileHover={{ scale: active ? 1 : 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className={`px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
+      className={`whitespace-nowrap px-4 sm:px-6 py-2.5 sm:py-2 rounded-xl font-bold text-[10px] sm:text-xs uppercase tracking-[0.1em] sm:tracking-widest transition-all ${
         active 
         ? 'bg-gray-900 text-white shadow-sm' 
-        : 'text-gray-400 hover:text-gray-900'
+        : 'text-gray-500 hover:text-gray-900 bg-transparent hover:bg-gray-50/50'
       }`}
     >
       <span>{label}</span>

@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { collection, query, getDocs, orderBy } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Recipe } from '../types';
 import RecipeCard from '../components/RecipeCard';
 import SuggestionForm from '../components/SuggestionForm';
+import RecipeCarousel from '../components/RecipeCarousel';
 import { Search, Loader2, AlertCircle, Filter, X as CloseIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSearchParams } from 'react-router-dom';
@@ -13,6 +14,7 @@ const CATEGORIES = [
   { id: 'pagi', label: 'Pagi', color: 'bg-emerald-100' },
   { id: 'siang', label: 'Siang', color: 'bg-amber-100' },
   { id: 'sore', label: 'Sore', color: 'bg-orange-100' },
+  { id: 'malam', label: 'Malam', color: 'bg-indigo-100' },
 ];
 
 const HEALTH_CONDITIONS = [
@@ -28,6 +30,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [currentMealTime, setCurrentMealTime] = useState<'pagi' | 'siang' | 'sore' | 'malam'>('pagi');
   const [searchParams, setSearchParams] = useSearchParams();
   
   const selectedCategory = searchParams.get('category') || 'semua';
@@ -35,6 +38,18 @@ export default function Home() {
 
   useEffect(() => {
     fetchRecipes();
+    
+    // Determine time of day based on user's local time
+    const hour = new Date().getHours();
+    if (hour >= 0 && hour < 11) {
+      setCurrentMealTime('pagi');
+    } else if (hour >= 11 && hour < 16) {
+      setCurrentMealTime('siang');
+    } else if (hour >= 16 && hour < 19) {
+      setCurrentMealTime('sore');
+    } else {
+      setCurrentMealTime('malam');
+    }
   }, []);
 
   useEffect(() => {
@@ -60,6 +75,10 @@ export default function Home() {
     }
   };
 
+  const recommendedRecipes = useMemo(() => {
+    return recipes.filter(r => r.mealTime === currentMealTime);
+  }, [recipes, currentMealTime]);
+
   const filteredRecipes = useMemo(() => {
     return recipes.filter(recipe => {
       const matchesSearch = recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -80,10 +99,9 @@ export default function Home() {
     <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)] overflow-hidden relative">
       <button 
         onClick={() => setIsFilterOpen(!isFilterOpen)}
-        className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-orange-600 text-white px-6 py-3.5 rounded-full shadow-xl flex items-center gap-2 font-bold active:scale-95 transition-all"
+        className="md:hidden fixed bottom-6 left-6 z-40 bg-white text-gray-900 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center border border-gray-200 active:scale-95 transition-all"
       >
-        {isFilterOpen ? <CloseIcon size={20} /> : <Filter size={20} />}
-        <span className="text-sm">Filter</span>
+        {isFilterOpen ? <CloseIcon size={24} className="text-gray-900" /> : <Filter size={24} className="text-orange-600" />}
       </button>
 
       {/* Overlay for mobile filter */}
@@ -102,7 +120,7 @@ export default function Home() {
       {/* Sidebar / Filters */}
       <aside 
         id="categories" 
-        className={`fixed inset-y-0 left-0 z-50 md:sticky md:top-0 md:z-0 w-4/5 sm:w-64 border-r border-gray-100 bg-white p-6 flex flex-col gap-8 flex-shrink-0 transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-50 md:sticky md:top-0 md:z-0 w-4/5 sm:w-64 border-r border-gray-100 bg-white p-6 flex flex-col gap-8 flex-shrink-0 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none ${
           isFilterOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
@@ -136,7 +154,8 @@ export default function Home() {
                   <span className="text-lg">
                     {cat.id === 'pagi' && '🌅'}
                     {cat.id === 'siang' && '☀️'}
-                    {cat.id === 'sore' && '🌙'}
+                    {cat.id === 'sore' && '🌇'}
+                    {cat.id === 'malam' && '🌙'}
                     {cat.id === 'semua' && '🍽️'}
                   </span>
                   {cat.label}
@@ -180,15 +199,20 @@ export default function Home() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto overflow-x-hidden">
-        <header className="mb-8">
-          <div className="flex flex-col lg:flex-row justify-between lg:items-end mb-8 gap-6">
-            <div>
-              <h1 className="text-3xl font-serif font-bold text-gray-900 mb-1">Menu Rekomendasi Hari Ini</h1>
-              <p className="text-gray-500 text-sm">Resep bergizi seimbang untuk pemulihan kesehatan.</p>
-            </div>
-          </div>
-          
+      <main className="flex-1 p-6 md:p-8 pb-28 min-h-screen overflow-y-auto overflow-x-hidden">
+        {recommendedRecipes.length > 0 && !loading && (
+          <RecipeCarousel 
+            recipes={recommendedRecipes} 
+            timeLabel={currentMealTime} 
+          />
+        )}
+
+        <motion.header 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
           <div className="relative flex items-center w-full">
             <Search className="absolute left-4 text-gray-400" size={18} />
             <input 
@@ -199,7 +223,7 @@ export default function Home() {
               className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-orange-100 focus:border-orange-200 outline-none text-sm transition-all duration-300"
             />
           </div>
-        </header>
+        </motion.header>
 
         {/* Recipe Grid */}
         <section>

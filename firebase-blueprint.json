@@ -23,7 +23,7 @@
         "title": { "type": "string" },
         "description": { "type": "string" },
         "coverImage": { "type": "string" },
-        "mealTime": { "type": "string", "enum": ["pagi", "siang", "sore"] },
+        "mealTime": { "type": "string", "enum": ["pagi", "siang", "sore", "malam"] },
         "condition": { "type": "string", "description": "e.g. maag, diabetes, etc." },
         "nutrition": {
           "type": "object",

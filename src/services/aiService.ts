@@ -1,9 +1,9 @@
-export async function askAssistant(question: string) {
+export async function askAssistant(question: string, mode: 'chat' | 'sulap' = 'chat') {
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question, mode }),
     });
     
     const data = await res.json();

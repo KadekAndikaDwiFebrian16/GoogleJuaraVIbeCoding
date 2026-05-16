@@ -1,8 +1,7 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Recipe } from '../types';
 import { motion, useMotionValue, useSpring, useTransform } from 'motion/react';
-import { Clock, Heart, Star, ChevronRight } from 'lucide-react';
 
 interface RecipeCardProps {
   recipe: Recipe;

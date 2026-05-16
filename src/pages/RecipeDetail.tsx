@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc, collection, query, getDocs, addDoc, serverTimestamp, orderBy, updateDoc, increment, deleteDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Recipe, Comment, Nutrition } from '../types';
+import { Recipe, Comment } from '../types';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -11,7 +11,6 @@ import 'swiper/css/pagination';
 import { motion } from 'motion/react';
 import { 
   ChevronLeft, ChevronRight, Clock, Users, Star, ChefHat, 
-  Flame, Salad, Droplets, Beef, Send,
   MessageCircle, Info, Timer, Trash2
 } from 'lucide-react';
 import CookingTimer from '../components/CookingTimer';

@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { logout } from '../lib/firebase';
-import { LogOut, User, PlusCircle, ChefHat, Menu, X } from 'lucide-react';
+import { LogOut, PlusCircle, ChefHat, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-export default function Navbar() {
+export default function Navbar({ 
+  openAssistant, 
+  setOpenAssistant 
+}: { 
+  openAssistant: 'chef' | 'sulap' | null, 
+  setOpenAssistant: (a: 'chef' | 'sulap' | null) => void 
+}) {
   const { profile, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,15 +23,17 @@ export default function Navbar() {
 
   return (
     <nav className="bg-white sticky top-0 z-50 border-b border-gray-100 px-6 md:px-8 h-16 flex justify-between items-center transition-all">
-      <Link to="/" className="flex items-center gap-2 group">
-        <motion.span 
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="text-2xl font-bold text-orange-600 tracking-tight"
-        >
-          Dapursehat.
-        </motion.span>
-      </Link>
+      <div className="flex items-center gap-4">
+        <Link to="/" className="flex items-center gap-2 group">
+          <motion.span 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="text-2xl font-bold text-orange-600 tracking-tight"
+          >
+            Dapursehat.
+          </motion.span>
+        </Link>
+      </div>
 
       <div className="flex items-center gap-4">
         <div className="hidden md:flex items-center gap-6 text-sm font-bold text-gray-400 mr-4">

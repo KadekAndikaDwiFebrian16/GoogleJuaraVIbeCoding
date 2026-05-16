@@ -18,7 +18,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email == 'febriandwiiiii@gmail.com' ||
+        ('email' in request.auth.token && request.auth.token.email == 'febriandwiiiii@gmail.com') ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
       );
     }
@@ -28,7 +28,7 @@ service cloud.firestore {
     }
 
     function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+      return id is string && id.size() <= 128;
     }
 
     // --- Collection: Users ---
@@ -49,7 +49,7 @@ service cloud.firestore {
       function isValidRecipe(data) {
         return data.title is string && data.title.size() <= 100 &&
                data.description is string && data.description.size() <= 1000 &&
-               data.mealTime in ['pagi', 'siang', 'sore'] &&
+               data.mealTime in ['pagi', 'siang', 'sore', 'malam'] &&
                data.ingredients is list && data.instructions is list;
       }
 
