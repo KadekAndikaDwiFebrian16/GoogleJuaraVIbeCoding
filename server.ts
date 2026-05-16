@@ -35,7 +35,7 @@ async function startServer() {
 
   app.post("/api/chat", async (req, res) => {
     try {
-      const { question, user_lat, user_lng } = req.body;
+      const { question } = req.body;
       const ai = getGenAI();
       
       const systemInstruction = `Anda adalah Chef AI untuk aplikasi 'Dapursehat'.
@@ -53,20 +53,28 @@ Jangan pernah memberikan informasi yang membahayakan kesehatan. Berikan takaran 
       const resultText = response.text;
       res.json({ text: resultText });
     } catch (error: any) {
-      console.error("AI Assistant Error:", error);
+      console.error("AI Assistant Error Details:", error);
       
-      let userFriendlyMessage = "Maaf, sistem AI sedang mengalami gangguan teknis. Mohon coba lagi beberapa saat lagi.";
+      let userFriendlyMessage = "Maaf, AI Sedang tidak menanggapi. Coba lagi dalam beberapa saat.";
       
-      if (error?.message?.includes("RESOURCE_EXHAUSTED") || error?.status === "RESOURCE_EXHAUSTED" || error?.status === 429) {
-        userFriendlyMessage = "Maaf, kuota harian AI gratis (Gemini Flash) sedang habis (20 req/hari). Silakan coba lagi besok atau gunakan API Key berbayar di menu Settings > Secrets! 🙏";
-      } else if (error?.status === 404 || error?.message?.includes("NOT_FOUND") || error?.message?.includes("not found")) {
-        userFriendlyMessage = "Maaf, model AI terpilih sedang tidak tersedia. Kami akan mencoba model alternatif. Mohon coba kirim pesan sekali lagi.";
+      const errorMessage = error?.message || "";
+      const errorStatus = error?.status;
+      const errorCode = error?.error?.code;
+
+      if (errorMessage.includes("RESOURCE_EXHAUSTED") || errorStatus === 429 || errorStatus === "RESOURCE_EXHAUSTED" || errorCode === 429) {
+        userFriendlyMessage = "Maaf, kuota harian AI gratis sudah habis (20 req/hari). Silakan coba lagi besok atau gunakan API Key berbayar di Settings > Secrets! 🙏";
+      } else if (errorMessage.includes("NOT_FOUND") || errorStatus === 404 || errorCode === 404) {
+        userFriendlyMessage = "Model AI sedang dalam pemeliharaan atau tidak tersedia di region ini. Kami sedang memperbaikinya.";
+      } else if (errorMessage.includes("PERMISSION_DENIED") || errorStatus === 403 || errorCode === 403) {
+        userFriendlyMessage = "Akses AI ditolak. Silakan periksa kembali pengaturan API Key Anda di menu Settings.";
+      } else if (errorMessage.includes("internal error") || errorStatus === 500) {
+        userFriendlyMessage = "Terjadi kesalahan pada server AI. Mohon coba lagi secara berkala.";
       }
 
       res.status(500).json({ 
         status: "error", 
         ui_message: userFriendlyMessage,
-        error: error.message || "Kendala teknis" 
+        error: errorMessage
       });
     }
   });
