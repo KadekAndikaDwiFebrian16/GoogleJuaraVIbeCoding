@@ -13,12 +13,24 @@ export default function CookingTimer() {
 
   const alarmIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const playSingleBeep = () => {
+  const ensureAudioContext = async () => {
     try {
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+    } catch (e) {
+      console.error('Failed to resume audio context:', e);
+    }
+  };
+
+  const playSingleBeep = () => {
+    try {
+      ensureAudioContext();
       const ctx = audioContextRef.current;
+      if (!ctx) return;
       const t = ctx.currentTime;
       
       const playBeep = (timeOffset: number) => {
@@ -108,9 +120,13 @@ export default function CookingTimer() {
     };
   }, [isActive, minutes, seconds]);
 
-  const toggleTimer = () => setIsActive(!isActive);
+  const toggleTimer = async () => {
+    await ensureAudioContext();
+    setIsActive(!isActive);
+  };
   
-  const resetTimer = () => {
+  const resetTimer = async () => {
+    await ensureAudioContext();
     setIsActive(false);
     setIsFinished(false);
     setMinutes(5);
