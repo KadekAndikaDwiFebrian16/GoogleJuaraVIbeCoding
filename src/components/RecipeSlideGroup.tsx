@@ -42,7 +42,7 @@ export default function RecipeSlideGroup({ recipes, title }: RecipeSlideGroupPro
           <div className="flex items-center gap-3 mt-2 md:mt-4">
             <div className="h-[2px] w-12 bg-orange-600 rounded-full" />
             <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-gray-400">
-              Menampilkan {currentRecipes.length} dari {recipes.length} Resep Terpilih
+              Menampilkan {recipes.length} Resep Terpilih
             </p>
           </div>
         </div>

@@ -58,7 +58,13 @@ export default function AdminDashboard() {
       setSuggestions(sSnap.docs.map(d => ({ id: d.id, ...d.data() } as Suggestion)));
 
       const uSnap = await getDocs(collection(db, 'users'));
-      setUserList(uSnap.docs.map(d => ({ ...d.data() } as UserProfile)));
+      setUserList(uSnap.docs.map(d => {
+        const data = d.data();
+        return { 
+          uid: d.id, // Ensure uid is taken from doc ID if missing in data
+          ...data 
+        } as UserProfile;
+      }));
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, 'admin-data');
     } finally {
@@ -618,17 +624,23 @@ export default function AdminDashboard() {
                       </span>
                     </div>
 
-                    <button 
-                      onClick={() => handleToggleAdmin(user)}
-                      className={`p-2.5 rounded-xl transition-all ${
+                    <motion.button 
+                      type="button"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleAdmin(user);
+                      }}
+                      className={`relative z-10 p-2.5 rounded-xl transition-all shadow-sm ${
                         user.role === 'admin' 
-                        ? 'bg-red-50 text-red-500 hover:bg-red-100' 
-                        : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
+                        ? 'bg-red-50 text-red-500 hover:bg-red-100 hover:shadow-red-100/50' 
+                        : 'bg-orange-50 text-orange-600 hover:bg-orange-100 hover:shadow-orange-100/50'
                       }`}
                       title={user.role === 'admin' ? "Jadikan User Biasa" : "Jadikan Admin"}
                     >
                       {user.role === 'admin' ? <ShieldAlert size={20} /> : <Shield size={20} />}
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
               ))}

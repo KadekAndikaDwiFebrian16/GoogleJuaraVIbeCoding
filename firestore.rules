@@ -18,7 +18,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        ('email' in request.auth.token && request.auth.token.email == 'febriandwiiiii@gmail.com') ||
+        request.auth.token.email == 'febriandwiiiii@gmail.com' ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
       );
     }
@@ -28,21 +28,20 @@ service cloud.firestore {
     }
 
     function isValidId(id) {
-      return id is string && id.size() <= 128;
+      return id is string && id.size() > 0 && id.size() <= 128;
     }
 
     // --- Collection: Users ---
     match /users/{userId} {
-      allow get: if isSignedIn() && isValidId(userId);
-      allow list: if isAdmin();
+      allow get: if isSignedIn();
+      allow list: if isSignedIn(); // Allow listing users for admin to manage, or search
       allow create: if isOwner(userId) && isValidId(userId) &&
                       request.resource.data.keys().hasAll(['uid', 'email', 'role', 'createdAt']) &&
-                      (request.resource.data.role == 'user' || request.resource.data.email == 'febriandwiiiii@gmail.com');
-      allow update: if (isOwner(userId) && isValidId(userId) &&
-                        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'role']) &&
-                         (request.resource.data.role == 'user' || request.resource.data.email == 'febriandwiiiii@gmail.com'))) ||
+                      (request.resource.data.role == 'user' || request.auth.token.email == 'febriandwiiiii@gmail.com');
+      allow update: if (isOwner(userId) && 
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL'])) ||
                       (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']));
-      allow delete: if isAdmin() && isValidId(userId);
+      allow delete: if isAdmin();
     }
 
     // --- Collection: Recipes ---
