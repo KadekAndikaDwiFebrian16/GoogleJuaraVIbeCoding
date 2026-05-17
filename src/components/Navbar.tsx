@@ -19,13 +19,18 @@ export default function Navbar() {
     <nav className="bg-white sticky top-0 z-50 border-b border-gray-100 px-6 md:px-8 h-16 flex justify-between items-center transition-all">
       <div className="flex items-center gap-4">
         <Link to="/" className="flex items-center gap-2 group">
-          <motion.span 
+          <motion.div 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="text-2xl font-bold text-orange-600 tracking-tight"
+            className="flex items-center gap-2"
           >
-            Dapursehat.
-          </motion.span>
+            <div className="w-10 h-10 bg-orange-600 rounded-2xl flex items-center justify-center text-white rotate-3 group-hover:rotate-0 transition-transform duration-300">
+               <ChefHat size={22} />
+            </div>
+            <span className="text-2xl font-serif font-black text-gray-900 tracking-tight">
+              Dapur<span className="text-orange-600">Sehat</span>
+            </span>
+          </motion.div>
         </Link>
       </div>
 
@@ -69,7 +74,7 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="absolute top-16 left-0 right-0 bg-white border-b border-gray-100 shadow-lg md:hidden overflow-hidden z-50"
+            className="absolute top-16 left-0 right-0 bg-white border-b border-gray-100 shadow-lg shadow-gray-100/50 md:hidden overflow-hidden z-50"
           >
             <div className="flex flex-col p-6 gap-6">
               <div className="flex flex-col gap-4">

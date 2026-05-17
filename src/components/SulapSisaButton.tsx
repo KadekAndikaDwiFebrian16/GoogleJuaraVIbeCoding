@@ -51,7 +51,7 @@ export default function SulapSisaButton({ isOpen, onToggle }: { isOpen: boolean,
             initial={{ opacity: 0, scale: 0.8, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0, transition: { type: 'spring', damping: 25, stiffness: 300 } }}
             exit={{ opacity: 0, scale: 0.95, y: 20, transition: { duration: 0.15 } }}
-            className="fixed bottom-24 right-4 sm:right-8 sm:w-[380px] w-[calc(100vw-32px)] max-h-[calc(100vh-120px)] h-[600px] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col z-[100] border border-emerald-100"
+            className="fixed bottom-24 right-4 sm:right-8 sm:w-[380px] w-[calc(100vw-32px)] max-h-[calc(100vh-120px)] h-[600px] bg-white rounded-3xl shadow-xl shadow-gray-200/50 overflow-hidden flex flex-col z-[100] border border-emerald-100 will-change-transform"
           >
             <div className="p-5 bg-emerald-600 text-white flex items-center justify-between relative overflow-hidden">
               <div className="flex items-center gap-3">

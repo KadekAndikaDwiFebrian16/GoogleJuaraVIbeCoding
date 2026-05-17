@@ -1,6 +1,6 @@
 {
   "name": "Dapursehat",
-  "description": "Aplikasi resep makanan pintar dengan gizi lengkap, kategori makan sehat, dan asisten AI untuk membantu Anda memasak.",
+  "description": "Aplikasi resep makanan pintar dengan gizi lengkap, Meal Planner 3 hari kustom, dan asisten AI untuk gaya hidup sehat.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

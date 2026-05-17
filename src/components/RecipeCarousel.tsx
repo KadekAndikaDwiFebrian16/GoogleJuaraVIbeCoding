@@ -38,7 +38,7 @@ export default function RecipeCarousel({ recipes, timeLabel = "Hari" }: RecipeCa
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${displayRecipes[currentIndex].coverImage})` }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           
           <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 flex flex-col items-start">
             <span className="bg-orange-600 text-white px-3 py-1 text-xs font-bold rounded-full mb-3 shadow-md capitalize">
@@ -52,7 +52,7 @@ export default function RecipeCarousel({ recipes, timeLabel = "Hari" }: RecipeCa
             </p>
             <Link 
               to={`/recipe/${displayRecipes[currentIndex].id}`}
-              className="bg-white text-gray-900 px-6 py-2.5 rounded-full text-sm font-bold hover:bg-gray-100 transition-colors shadow-lg"
+              className="bg-white text-gray-900 px-6 py-2.5 rounded-full text-sm font-bold hover:bg-gray-100 transition-colors"
             >
               Lihat Resep
             </Link>

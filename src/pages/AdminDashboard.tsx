@@ -210,7 +210,7 @@ export default function AdminDashboard() {
             exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
             className="fixed bottom-10 right-4 md:right-10 z-[100] pointer-events-none"
           >
-            <div className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.1)] p-5 rounded-[2rem] flex items-center gap-4 min-w-[300px] overflow-hidden relative group">
+            <div className="bg-white border border-gray-100 md:bg-white/80 md:backdrop-blur-xl md:border-white/40 shadow-xl shadow-gray-200/30 p-5 rounded-[2rem] flex items-center gap-4 min-w-[300px] overflow-hidden relative group">
               <div className="absolute top-0 left-0 w-full h-[2px] bg-orange-100/30 overflow-hidden">
                 <motion.div 
                   initial={{ x: '-100%' }}
@@ -295,14 +295,28 @@ export default function AdminDashboard() {
                 </div>
                     <div className="space-y-6">
                       <div className="space-y-3">
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Gambar Sampul</label>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 font-sans">Gambar Sampul</label>
                         <ImageUpload value={coverImage} onChange={setCoverImage} folder="recipes" />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <FormInput label="Waktu Masak" value={prepTime} onChange={setPrepTime} placeholder="Contoh: 30 Mnt" />
                         <FormInput label="Porsi" value={servings} onChange={setServings} placeholder="Contoh: 2-4 Org" />
                       </div>
-                      <FormInput label="Kategori Kondisi" value={condition} onChange={setCondition} placeholder="Contoh: Maag Safe" />
+                      <div className="space-y-3">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 font-sans">Kategori Kondisi</label>
+                        <input 
+                          list="existing-conditions"
+                          value={condition} 
+                          onChange={(e) => setCondition(e.target.value)} 
+                          placeholder="Contoh: Maag Safe"
+                          className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-orange-100 outline-none text-gray-700 transition-all placeholder:text-gray-300"
+                        />
+                        <datalist id="existing-conditions">
+                          {Array.from(new Set(recipes.map(r => r.condition).filter(Boolean))).map(c => (
+                            <option key={c} value={c} />
+                          ))}
+                        </datalist>
+                      </div>
                     </div>
               </div>
 
@@ -387,7 +401,7 @@ export default function AdminDashboard() {
                               value={step.text} 
                               onChange={(e) => handleInstructionChange(i, 'text', e.target.value)}
                               placeholder={`Jelaskan secara detail langkah ke-${step.step} ini...`}
-                              className="w-full bg-white border border-gray-100 rounded-2xl px-6 py-5 outline-none focus:ring-2 focus:ring-orange-100 text-base leading-relaxed min-h-[160px] shadow-sm transition-all"
+                              className="w-full bg-white border border-gray-100 rounded-2xl px-6 py-5 outline-none focus:ring-2 focus:ring-orange-100 text-base leading-relaxed min-h-[160px] transition-all"
                               required
                             />
                           </div>
@@ -597,7 +611,7 @@ function ImageUpload({ value, onChange, folder, compact = false }: { value: stri
         )}
 
         {uploading && (
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in">
+          <div className="absolute inset-0 bg-white/95 md:bg-white/80 md:backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in z-50">
             <Loader2 className="animate-spin text-orange-600 mb-2" size={24} />
             <span className="text-[10px] font-bold text-orange-600 uppercase tracking-widest">Uploading...</span>
           </div>

@@ -1,4 +1,4 @@
-export async function askAssistant(question: string, mode: 'chat' | 'sulap' = 'chat') {
+export async function askAssistant(question: string, mode: 'chat' | 'sulap' | 'meal-planner' = 'chat') {
   try {
     const res = await fetch("/api/chat", {
       method: "POST",

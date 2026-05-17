@@ -1,9 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Timer } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useUI } from '../context/UIContext';
 
 export default function CookingTimer() {
-  const [isOpen, setIsOpen] = useState(false);
+  const { activeComponent, setActiveComponent } = useUI();
+  const isOpen = activeComponent === 'timer';
+  const setIsOpen = (open: boolean) => setActiveComponent(open ? 'timer' : null);
+
   const [minutes, setMinutes] = useState(5);
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
@@ -68,18 +72,6 @@ export default function CookingTimer() {
       alarmIntervalRef.current = null;
     }
   };
-
-  useEffect(() => {
-    if (isOpen) {
-      window.dispatchEvent(new CustomEvent('close-assistant'));
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    const handleCloseTimer = () => setIsOpen(false);
-    window.addEventListener('close-timer', handleCloseTimer);
-    return () => window.removeEventListener('close-timer', handleCloseTimer);
-  }, []);
 
   useEffect(() => {
     const handleStartTimer = (e: any) => {
@@ -160,7 +152,7 @@ export default function CookingTimer() {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="absolute bottom-full left-0 mb-4 w-[calc(100vw-48px)] sm:w-64 bg-white rounded-3xl shadow-2xl p-6 border border-gray-100 overflow-hidden"
+            className="absolute bottom-full left-0 mb-4 w-[calc(100vw-48px)] sm:w-64 bg-white rounded-3xl shadow-xl shadow-orange-100/30 p-6 border border-gray-100 overflow-hidden"
           >
             {isFinished && (
               <motion.div 
@@ -168,7 +160,10 @@ export default function CookingTimer() {
                 animate={{ opacity: 1 }}
                 className="absolute inset-0 bg-orange-600/10 flex flex-col items-center justify-center pointer-events-none"
               >
-                <div className="animate-ping bg-orange-600 w-12 h-12 rounded-full opacity-20"></div>
+                <div className="hidden md:block animate-ping bg-orange-600 w-12 h-12 rounded-full opacity-20"></div>
+                {!window.matchMedia('(min-width: 768px)').matches && (
+                  <div className="bg-orange-600/20 w-full h-full animate-pulse" />
+                )}
               </motion.div>
             )}
 

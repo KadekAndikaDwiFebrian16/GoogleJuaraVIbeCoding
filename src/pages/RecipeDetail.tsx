@@ -148,7 +148,7 @@ export default function RecipeDetail() {
         
         <Link 
           to="/" 
-          className="absolute top-6 left-6 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-gray-900 shadow-sm hover:bg-white transition-all z-10"
+          className="absolute top-6 left-6 w-10 h-10 bg-white md:bg-white/90 md:backdrop-blur-md rounded-full flex items-center justify-center text-gray-900 shadow-sm hover:bg-white transition-all z-10"
         >
           <ChevronLeft size={20} />
         </Link>
@@ -251,7 +251,7 @@ export default function RecipeDetail() {
                   className="rounded-3xl bg-gray-50 border border-gray-100 overflow-hidden"
                 >
                   {recipe.instructions.map((step, idx) => (
-                    <SwiperSlide key={idx} className="p-8 md:p-12 pb-20">
+                    <SwiperSlide key={idx} className="p-5 md:p-12 pb-20">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start max-w-5xl mx-auto">
                         <div className="order-2 lg:order-1 pt-4">
                           <div className="flex items-center gap-4 mb-6">
@@ -293,7 +293,7 @@ export default function RecipeDetail() {
                         </div>
                         
                         {step.image ? (
-                          <div className="order-1 lg:order-2 w-full aspect-video lg:aspect-[4/3] rounded-3xl overflow-hidden shadow-xl border-4 border-white">
+                          <div className="order-1 lg:order-2 w-full aspect-video lg:aspect-[4/3] rounded-3xl overflow-hidden border-4 border-white shadow-lg shadow-orange-100/50">
                             <img 
                               src={step.image} 
                               alt={`Langkah ${step.step}`} 
@@ -313,10 +313,10 @@ export default function RecipeDetail() {
 
                 {/* Custom Navigation Buttons - Positioned at bottom center flanking pagination */}
                 <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-24 md:gap-32 z-10 pointer-events-none">
-                  <button className="swiper-nav-prev pointer-events-auto w-8 h-8 md:w-10 md:h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-orange-600 hover:bg-orange-600 hover:text-white transition-all duration-300 disabled:opacity-0 cursor-pointer">
+                  <button className="swiper-nav-prev pointer-events-auto w-8 h-8 md:w-10 md:h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-orange-600 hover:bg-orange-600 hover:text-white transition-all duration-300 disabled:opacity-0 cursor-pointer">
                     <ChevronLeft size={20} />
                   </button>
-                  <button className="swiper-nav-next pointer-events-auto w-8 h-8 md:w-10 md:h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-orange-600 hover:bg-orange-600 hover:text-white transition-all duration-300 disabled:opacity-0 cursor-pointer">
+                  <button className="swiper-nav-next pointer-events-auto w-8 h-8 md:w-10 md:h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-orange-600 hover:bg-orange-600 hover:text-white transition-all duration-300 disabled:opacity-0 cursor-pointer">
                     <ChevronRight size={20} />
                   </button>
                 </div>
@@ -334,7 +334,7 @@ export default function RecipeDetail() {
         {/* Comments Section */}
         <div className="mt-16 grid grid-cols-1 md:grid-cols-12 gap-12">
             <div className="md:col-span-4 lg:col-span-4">
-                <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 sticky top-24">
+                <div className="bg-white p-8 rounded-3xl border border-gray-100 sticky top-24">
                     <h3 className="text-xl font-bold text-gray-900 mb-2">Beri Ulasan</h3>
                     <p className="text-[10px] text-gray-400 mb-8 font-bold uppercase tracking-widest">Bagikan pengalaman memasak Anda</p>
                     

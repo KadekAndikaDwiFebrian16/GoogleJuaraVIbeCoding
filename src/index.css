@@ -6,3 +6,33 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Playfair Display", serif;
 }
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #FAFAF8;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #E5E7EB;
+    border-radius: 5px;
+    border: 3px solid #FAFAF8;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #D1D5DB;
+  }
+}

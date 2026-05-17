@@ -22,7 +22,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, index }) => {
   const rotateY = useTransform(mouseSpringX, [-0.5, 0.5], [-10, 10]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!cardRef.current) return;
+    if (!cardRef.current || window.innerWidth < 768) return;
     const rect = cardRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
@@ -40,22 +40,23 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, index }) => {
   return (
     <motion.div
       ref={cardRef}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      whileHover={{ y: -8 }}
+      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true }}
+      whileHover={window.innerWidth >= 768 ? { y: -12 } : {}}
+      whileTap={window.innerWidth >= 768 ? { scale: 0.97 } : { scale: 1 }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{ perspective: 1500 }}
-      className="group relative h-full rounded-3xl"
+      className="group relative h-full rounded-[2.5rem]"
     >
-      <Link to={`/recipe/${recipe.id}`} className="block h-full rounded-3xl isolate">
+      <Link to={`/recipe/${recipe.id}`} className="block h-full rounded-[2.5rem] isolate">
         <motion.div 
           style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
-          className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 transition-shadow duration-500 hover:shadow-2xl h-full flex flex-col will-change-transform isolate"
+          className="bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 transition-all duration-500 hover:shadow-xl hover:shadow-gray-200/20 h-full flex flex-col will-change-transform isolate"
         >
           {/* Image Container */}
-          <div className="h-48 w-full bg-gray-100 relative overflow-hidden shrink-0 rounded-t-[22px]">
+          <div className="h-52 w-full bg-gray-100 relative overflow-hidden shrink-0 rounded-t-[2.3rem]">
             <motion.img 
               src={recipe.coverImage} 
               alt={recipe.title}
@@ -63,13 +64,22 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, index }) => {
               referrerPolicy="no-referrer"
             />
             
+            {/* Shine effect on hover - Disabled on mobile */}
+            <div className="absolute inset-0 opacity-0 md:group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+              <motion.div 
+                animate={{ x: ['-100%', '200%'] }}
+                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
+                className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-25deg]"
+              />
+            </div>
+            
             {/* Badges */}
             <div className="absolute top-4 left-4 flex gap-2">
-                <span className="px-2 py-1 bg-white/90 backdrop-blur text-[9px] font-bold rounded text-gray-900 uppercase tracking-wider">
+                <span className="px-2 py-1 bg-white/95 md:backdrop-blur text-[9px] font-bold rounded text-gray-900 uppercase tracking-wider shadow-sm">
                     {recipe.mealTime}
                 </span>
                 {recipe.condition && (
-                    <span className="px-2 py-1 bg-orange-600 text-white text-[9px] font-bold rounded uppercase tracking-wider">
+                    <span className="px-2 py-1 bg-orange-600 text-white text-[9px] font-bold rounded uppercase tracking-wider shadow-sm">
                         {recipe.condition}
                     </span>
                 )}
