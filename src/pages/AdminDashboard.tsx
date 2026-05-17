@@ -3,17 +3,19 @@ import { Link } from 'react-router-dom';
 import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Recipe, Suggestion, InstructionStep } from '../types';
-import { Plus, Trash2, MessageSquare, Save, X, Loader2, ChefHat, Upload, Image as ImageIcon } from 'lucide-react';
+import { Recipe, Suggestion, InstructionStep, UserProfile } from '../types';
+import { Plus, Trash2, MessageSquare, Save, X, Loader2, ChefHat, Upload, Image as ImageIcon, Users, Shield, ShieldAlert, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatDate } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 
 export default function AdminDashboard() {
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<'add' | 'list' | 'suggestions'>('add');
+  const [activeTab, setActiveTab] = useState<'add' | 'list' | 'suggestions' | 'users'>('add');
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [userList, setUserList] = useState<UserProfile[]>([]);
+  const [userSearch, setUserSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   // Form State
@@ -54,12 +56,36 @@ export default function AdminDashboard() {
 
       const sSnap = await getDocs(query(collection(db, 'suggestions'), orderBy('createdAt', 'desc')));
       setSuggestions(sSnap.docs.map(d => ({ id: d.id, ...d.data() } as Suggestion)));
+
+      const uSnap = await getDocs(collection(db, 'users'));
+      setUserList(uSnap.docs.map(d => ({ ...d.data() } as UserProfile)));
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, 'admin-data');
     } finally {
       setLoading(false);
     }
   };
+
+  const handleToggleAdmin = async (targetUser: UserProfile) => {
+    if (targetUser.email === 'febriandwiiiii@gmail.com') {
+      triggerNotification('Owner tidak bisa diubah perannya.');
+      return;
+    }
+
+    const newRole = targetUser.role === 'admin' ? 'user' : 'admin';
+    try {
+      await updateDoc(doc(db, 'users', targetUser.uid), { role: newRole });
+      triggerNotification(`Peran ${targetUser.displayName} diubah ke ${newRole}`);
+      fetchData();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `users/${targetUser.uid}`);
+    }
+  };
+
+  const filteredUsers = userList.filter(u => 
+    u.email?.toLowerCase().includes(userSearch.toLowerCase()) || 
+    u.displayName?.toLowerCase().includes(userSearch.toLowerCase())
+  );
 
   const handleAddIngredient = () => setIngredients([...ingredients, '']);
   const handleIngredientChange = (idx: number, val: string) => {
@@ -255,6 +281,7 @@ export default function AdminDashboard() {
             <TabBtn active={activeTab === 'add'} onClick={() => { if(!editingRecipeId) resetForm(); setActiveTab('add'); }} label={editingRecipeId ? "Edit" : "Tambah"} />
             <TabBtn active={activeTab === 'list'} onClick={() => { resetForm(); setActiveTab('list'); }} label="Resep" />
             <TabBtn active={activeTab === 'suggestions'} onClick={() => { resetForm(); setActiveTab('suggestions'); }} label="Saran" />
+            <TabBtn active={activeTab === 'users'} onClick={() => { resetForm(); setActiveTab('users'); }} label="Pengguna" />
         </div>
       </div>
 
@@ -542,6 +569,75 @@ export default function AdminDashboard() {
               <div className="text-center py-24 bg-white rounded-3xl border border-dashed border-gray-200">
                 <MessageSquare size={40} className="mx-auto text-gray-100 mb-4" />
                 <p className="text-gray-400 text-sm font-medium">Belum ada saran dari komunitas.</p>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {activeTab === 'users' && (
+          <motion.div 
+            key="users"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-8"
+          >
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4">
+              <Search className="text-gray-300" size={20} />
+              <input 
+                type="text" 
+                placeholder="Cari email atau nama pengguna..."
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 placeholder:text-gray-300"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredUsers.map((user) => (
+                <div key={user.uid} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col items-center text-center relative group overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-orange-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  
+                  <div className="relative mb-4">
+                    <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}&background=random`} className="w-20 h-20 rounded-[2rem] object-cover shadow-lg border-4 border-gray-50" />
+                    {user.role === 'admin' && (
+                      <div className="absolute -bottom-1 -right-1 bg-gray-900 text-white p-1.5 rounded-xl border-2 border-white shadow-md">
+                        <ShieldAlert size={14} />
+                      </div>
+                    )}
+                  </div>
+
+                  <h4 className="font-bold text-gray-900 mb-1 truncate w-full">{user.displayName}</h4>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 truncate w-full">{user.email}</p>
+
+                  <div className="w-full pt-4 border-t border-gray-50 flex items-center justify-between">
+                    <div className="flex flex-col items-start gap-0.5">
+                      <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Peran</span>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${user.role === 'admin' ? 'text-orange-600' : 'text-gray-500'}`}>
+                        {user.role}
+                      </span>
+                    </div>
+
+                    <button 
+                      onClick={() => handleToggleAdmin(user)}
+                      className={`p-2.5 rounded-xl transition-all ${
+                        user.role === 'admin' 
+                        ? 'bg-red-50 text-red-500 hover:bg-red-100' 
+                        : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
+                      }`}
+                      title={user.role === 'admin' ? "Jadikan User Biasa" : "Jadikan Admin"}
+                    >
+                      {user.role === 'admin' ? <ShieldAlert size={20} /> : <Shield size={20} />}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {filteredUsers.length === 0 && (
+              <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-100">
+                <Users size={40} className="mx-auto text-gray-100 mb-4" />
+                <p className="text-gray-400 text-sm font-medium">Pengguna tidak ditemukan.</p>
               </div>
             )}
           </motion.div>

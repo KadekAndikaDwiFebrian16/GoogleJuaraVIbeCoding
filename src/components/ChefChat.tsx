@@ -9,7 +9,7 @@ interface Message {
   text: string;
 }
 
-export default function AIAssistant({ isOpen, onToggle }: { isOpen: boolean, onToggle: () => void }) {
+export default function ChefChat({ isOpen, onToggle }: { isOpen: boolean, onToggle: () => void }) {
   const [messages, setMessages] = useState<Message[]>([
     { role: 'ai', text: 'Halo! Saya Chef AI. Ada yang bisa saya bantu hari ini? Tanyakan apa saja seputar resep, tips dapur, atau informasi gizi makanan sehat!' }
   ]);

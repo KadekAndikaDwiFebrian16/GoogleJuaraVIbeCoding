@@ -15,19 +15,22 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, index }) => {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  const mouseSpringX = useSpring(x, { stiffness: 100, damping: 20 });
-  const mouseSpringY = useSpring(y, { stiffness: 100, damping: 20 });
+  const mouseSpringX = useSpring(x, { stiffness: 150, damping: 25 });
+  const mouseSpringY = useSpring(y, { stiffness: 150, damping: 25 });
 
-  const rotateX = useTransform(mouseSpringY, [-0.5, 0.5], [10, -10]);
-  const rotateY = useTransform(mouseSpringX, [-0.5, 0.5], [-10, 10]);
+  const rotateX = useTransform(mouseSpringY, [-0.5, 0.5], [7, -7]);
+  const rotateY = useTransform(mouseSpringX, [-0.5, 0.5], [-7, 7]);
+  
+  // Parallax for image inside card
+  const imgX = useTransform(mouseSpringX, [-0.5, 0.5], [5, -5]);
+  const imgY = useTransform(mouseSpringY, [-0.5, 0.5], [5, -5]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!cardRef.current || window.innerWidth < 768) return;
+    if (!cardRef.current || window.innerWidth < 1024) return;
     const rect = cardRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
     
-    // Normalize position from -0.5 to 0.5
     x.set((e.clientX - centerX) / rect.width);
     y.set((e.clientY - centerY) / rect.height);
   };
@@ -40,49 +43,69 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, index }) => {
   return (
     <motion.div
       ref={cardRef}
-      initial={{ opacity: 0, y: 30, scale: 0.9 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true }}
-      whileHover={window.innerWidth >= 768 ? { y: -12 } : {}}
-      whileTap={window.innerWidth >= 768 ? { scale: 0.97 } : { scale: 1 }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      whileHover={window.innerWidth >= 1024 ? { y: -8, transition: { duration: 0.3, ease: [0.23, 1, 0.32, 1] } } : {}}
+      whileTap={{ scale: 0.98 }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      style={{ perspective: 1500 }}
-      className="group relative h-full rounded-[2.5rem]"
+      style={{ 
+        perspective: 2000,
+        // @ts-ignore
+        "--mouse-x": useTransform(x, (val) => `${(val + 0.5) * 100}%`),
+        // @ts-ignore
+        "--mouse-y": useTransform(y, (val) => `${(val + 0.5) * 100}%`),
+      }}
+      className="group relative h-full rounded-[2.5rem] will-change-transform"
     >
       <Link to={`/recipe/${recipe.id}`} className="block h-full rounded-[2.5rem] isolate">
         <motion.div 
           style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
-          className="bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 transition-all duration-500 hover:shadow-xl hover:shadow-gray-200/20 h-full flex flex-col will-change-transform isolate"
+          className="bg-white rounded-[2.5rem] overflow-hidden border border-gray-100/80 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.06)] hover:border-orange-200/50 h-full flex flex-col will-change-transform isolate relative"
         >
+          {/* Dynamic Glow Effect - Desktop Only */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),rgba(251,146,60,0.08)_0%,transparent_70%)] pointer-events-none hidden lg:block" />
+
           {/* Image Container */}
-          <div className="h-52 w-full bg-gray-100 relative overflow-hidden shrink-0 rounded-t-[2.3rem]">
+          <div className="h-48 md:h-52 w-full bg-gray-50 relative overflow-hidden shrink-0 rounded-t-[2.3rem]">
             <motion.img 
               src={recipe.coverImage} 
               alt={recipe.title}
-              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+              loading="lazy"
+              style={{ x: imgX, y: imgY, scale: 1.15 }}
+              className="w-full h-full object-cover transition-transform duration-700 ease-out will-change-transform"
               referrerPolicy="no-referrer"
             />
             
-            {/* Shine effect on hover - Disabled on mobile */}
-            <div className="absolute inset-0 opacity-0 md:group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+            
+            {/* Shine Overlay */}
+            <div className="absolute inset-0 opacity-0 md:group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none">
               <motion.div 
-                animate={{ x: ['-100%', '200%'] }}
-                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
-                className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-25deg]"
+                animate={{ x: ['-200%', '200%'] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3, ease: "linear" }}
+                className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg]"
               />
             </div>
             
             {/* Badges */}
-            <div className="absolute top-4 left-4 flex gap-2">
-                <span className="px-2 py-1 bg-white/95 md:backdrop-blur text-[9px] font-bold rounded text-gray-900 uppercase tracking-wider shadow-sm">
+            <div className="absolute top-4 left-4 flex flex-col gap-1.5">
+                <span className="self-start px-2.5 py-1 bg-white/95 backdrop-blur-md text-[8px] md:text-[9px] font-black rounded-lg text-gray-900 uppercase tracking-[0.15em] shadow-sm border border-white/20">
                     {recipe.mealTime}
                 </span>
                 {recipe.condition && (
-                    <span className="px-2 py-1 bg-orange-600 text-white text-[9px] font-bold rounded uppercase tracking-wider shadow-sm">
+                    <span className="self-start px-2.5 py-1 bg-orange-600 text-white text-[8px] md:text-[9px] font-black rounded-lg uppercase tracking-[0.15em] shadow-sm border border-orange-400/30">
                         {recipe.condition}
                     </span>
                 )}
+            </div>
+
+            <div className="absolute bottom-3 left-4 right-4 flex justify-between items-center">
+              <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full border border-white/10">
+                <span className="text-orange-400 text-[10px]">★</span>
+                <span className="text-white text-[10px] font-black tracking-tight">{recipe.rating.toFixed(1)}</span>
+              </div>
             </div>
           </div>
 

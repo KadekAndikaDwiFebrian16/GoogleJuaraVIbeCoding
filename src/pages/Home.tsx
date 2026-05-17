@@ -2,9 +2,9 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { collection, query, getDocs, orderBy } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Recipe } from '../types';
-import RecipeCard from '../components/RecipeCard';
 import SuggestionForm from '../components/SuggestionForm';
 import RecipeCarousel from '../components/RecipeCarousel';
+import RecipeSlideGroup from '../components/RecipeSlideGroup';
 import { Search, Loader2, AlertCircle, Filter, X as CloseIcon, Leaf, Coffee, Carrot, Sparkles, ChefHat } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import { useSearchParams } from 'react-router-dom';
@@ -374,8 +374,8 @@ export default function Home() {
           </div>
         </motion.header>
 
-        {/* Recipe Grid */}
-        <section>
+        {/* Recipe Grid replaced by Adaptive Slide Group */}
+        <section className="relative z-10">
           {loading ? (
             <motion.div 
               initial={{ opacity: 0 }}
@@ -405,29 +405,12 @@ export default function Home() {
               </motion.p>
             </motion.div>
           ) : filteredRecipes.length > 0 ? (
-            <motion.div 
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, amount: 0.05 }}
-              variants={{
-                hidden: { opacity: 0 },
-                show: {
-                  opacity: 1,
-                  transition: {
-                    staggerChildren: 0.08
-                  }
-                }
-              }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              <AnimatePresence mode="popLayout">
-                {filteredRecipes.map((recipe: Recipe, idx: number) => (
-                  <RecipeCard key={recipe.id} recipe={recipe} index={idx} />
-                ))}
-              </AnimatePresence>
-            </motion.div>
+            <RecipeSlideGroup 
+              recipes={filteredRecipes} 
+              title={searchTerm || selectedCondition ? "Hasil Pencarian" : "Jelajahi Menu Sehat"} 
+            />
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 border-dashed">
+            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[2.5rem] border border-gray-100 border-dashed">
                 <AlertCircle size={40} className="text-gray-200 mb-4" />
                 <h3 className="text-lg font-bold text-gray-700">Resep Tidak Ditemukan</h3>
                 <p className="text-gray-400 text-sm max-w-xs text-center">Coba cari dengan kata kunci lain.</p>

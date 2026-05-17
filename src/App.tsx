@@ -8,8 +8,8 @@ import RecipeDetail from './pages/RecipeDetail';
 import AdminDashboard from './pages/AdminDashboard';
 import Login from './pages/Login';
 import AIAssistantHub from './components/AIAssistantHub';
-import AIAssistantChat from './components/AIAssistant';
-import SulapSisaChat from './components/SulapSisaButton';
+import ChefChat from './components/ChefChat';
+import SulapSisaChat from './components/SulapSisaChat';
 import MealPlannerChat from './components/MealPlannerChat';
 import Navbar from './components/Navbar';
 import Loader from './components/Loader';
@@ -115,7 +115,7 @@ function AppContent() {
                 else setActiveComponent(null);
               }}
             />
-            <AIAssistantChat 
+            <ChefChat 
               isOpen={assistantType === 'chef'} 
               onToggle={() => {
                 if (assistantType === 'chef') {

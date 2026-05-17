@@ -9,7 +9,7 @@ interface Message {
   text: string;
 }
 
-export default function SulapSisaButton({ isOpen, onToggle }: { isOpen: boolean, onToggle: () => void }) {
+export default function SulapSisaChat({ isOpen, onToggle }: { isOpen: boolean, onToggle: () => void }) {
   const [messages, setMessages] = useState<Message[]>([
     { role: 'ai', text: 'Halo! Saya Chef Zero-Waste. Sebutkan bahan-bahan sisa di kulkas Anda, dan saya akan meracik ide masakan kreatif agar tidak mubazir!' }
   ]);

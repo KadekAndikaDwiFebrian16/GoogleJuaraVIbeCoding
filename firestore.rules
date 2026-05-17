@@ -38,9 +38,10 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isValidId(userId) &&
                       request.resource.data.keys().hasAll(['uid', 'email', 'role', 'createdAt']) &&
                       (request.resource.data.role == 'user' || request.resource.data.email == 'febriandwiiiii@gmail.com');
-      allow update: if isOwner(userId) && isValidId(userId) &&
-                      (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'role']) &&
-                       (request.resource.data.role == 'user' || request.resource.data.email == 'febriandwiiiii@gmail.com'));
+      allow update: if (isOwner(userId) && isValidId(userId) &&
+                        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'role']) &&
+                         (request.resource.data.role == 'user' || request.resource.data.email == 'febriandwiiiii@gmail.com'))) ||
+                      (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']));
       allow delete: if isAdmin() && isValidId(userId);
     }
 
