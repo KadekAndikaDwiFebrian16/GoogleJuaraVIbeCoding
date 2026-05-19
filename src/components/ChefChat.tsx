@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, ChefHat, Loader2 } from 'lucide-react';
+import { X, Send, Salad, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { askAssistant } from '../services/aiService';
 
@@ -56,7 +56,7 @@ export default function ChefChat({ isOpen, onToggle }: { isOpen: boolean, onTogg
           <div className="p-5 bg-gray-900 text-white flex items-center justify-between relative overflow-hidden">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center text-white shadow-lg">
-                <ChefHat size={20} />
+                <Salad size={20} />
               </div>
               <div>
                 <h3 className="text-sm font-bold tracking-tight">AI Nutritionist</h3>
@@ -75,12 +75,16 @@ export default function ChefChat({ isOpen, onToggle }: { isOpen: boolean, onTogg
           <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#FAFAF8]">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] px-4 py-3 rounded-2xl shadow-sm text-sm leading-relaxed ${
+                <div className={`max-w-[85%] px-4 py-3 rounded-2xl shadow-sm text-[15px] leading-relaxed ${
                   msg.role === 'user' 
                   ? 'bg-orange-600 text-white' 
-                  : 'bg-white text-gray-800 border border-gray-100'
+                  : 'bg-white text-gray-900 border border-gray-200'
                 }`}>
-                  <div className="prose prose-sm max-w-none prose-orange prose-p:leading-relaxed prose-li:my-0">
+                  <div className={`prose max-w-none prose-p:leading-relaxed prose-li:my-1 ${
+                    msg.role === 'user' 
+                    ? 'prose-invert text-white prose-p:text-white prose-strong:text-white' 
+                    : 'prose-orange text-gray-900 prose-p:text-gray-900 prose-headings:text-gray-900 prose-headings:font-bold prose-strong:text-orange-900 prose-li:text-gray-900 prose-ul:text-gray-900 prose-ol:text-gray-900'
+                  }`}>
                     <ReactMarkdown>{msg.text}</ReactMarkdown>
                   </div>
                 </div>

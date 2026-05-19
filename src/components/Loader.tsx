@@ -1,6 +1,5 @@
-import React from 'react';
 import { motion } from 'motion/react';
-import { ChefHat } from 'lucide-react';
+import { Salad } from 'lucide-react';
 
 export default function Loader() {
   return (
@@ -38,7 +37,7 @@ export default function Loader() {
               ease: "easeInOut"
             }}
           >
-            <ChefHat size={40} className="text-orange-600" />
+            <Salad size={40} className="text-orange-600" />
           </motion.div>
         </div>
 

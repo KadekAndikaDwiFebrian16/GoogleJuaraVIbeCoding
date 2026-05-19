@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Recipe } from '../types';
 import RecipeCard from './RecipeCard';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface RecipeSlideGroupProps {
   recipes: Recipe[];
@@ -10,121 +10,90 @@ interface RecipeSlideGroupProps {
 }
 
 export default function RecipeSlideGroup({ recipes, title }: RecipeSlideGroupProps) {
-  const [currentPage, setCurrentPage] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const recipesPerPage = 6;
   
-  // 6 recipes per slide/page
-  const pageSize = 6;
-  const totalPages = Math.ceil(recipes.length / pageSize);
-  const currentRecipes = recipes.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+  // Reset currentPage when recipes change (like changing categories)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [recipes]);
 
-  const nextPage = () => setCurrentPage((prev) => (prev + 1) % totalPages);
-  const prevPage = () => setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
-
-  // Handle scroll snap events for mobile paginating
-  const handleScroll = () => {
-    if (!containerRef.current || window.innerWidth >= 1024) return;
-    const scrollLeft = containerRef.current.scrollLeft;
-    const width = containerRef.current.offsetWidth;
-    const newPage = Math.round(scrollLeft / width);
-    if (newPage !== currentPage) setCurrentPage(newPage);
-  };
+  const totalPages = Math.ceil(recipes.length / recipesPerPage);
+  const currentRecipes = recipes.slice((currentPage - 1) * recipesPerPage, currentPage * recipesPerPage);
 
   return (
-    <div className="w-full py-12 md:py-20 group/slider">
-      <div className="flex items-end justify-between mb-8 md:mb-12 px-2 md:px-0">
-        <div>
-          {title && (
-            <h2 className="text-2xl md:text-5xl font-serif font-black text-gray-900 tracking-tight leading-tight">
-              {title}
-            </h2>
-          )}
-          <div className="flex items-center gap-3 mt-2 md:mt-4">
-            <div className="h-[2px] w-12 bg-orange-600 rounded-full" />
-            <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-gray-400">
-              Menampilkan {recipes.length} Resep Terpilih
-            </p>
-          </div>
+    <div id="jelajahi-menu" className="w-full py-8 md:py-16 flex flex-col">
+      <div className="flex flex-col mb-8 md:mb-12 px-2 md:px-0">
+        {title && (
+          <h2 className="text-2xl md:text-4xl font-serif font-black text-gray-900 tracking-tight leading-tight">
+            {title}
+          </h2>
+        )}
+        <div className="flex items-center gap-3 mt-2 md:mt-4">
+          <div className="h-[2px] w-12 bg-orange-600 rounded-full" />
+          <p className="text-xs md:text-sm font-bold uppercase tracking-[0.15em] text-gray-500">
+            Menampilkan {recipes.length} Resep Terpilih
+          </p>
         </div>
+      </div>
 
-        {/* Desktop Pagination Controls */}
-        <div className="hidden lg:flex items-center gap-3">
-          <div className="flex items-center gap-2 mr-4">
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <motion.div
-                key={i}
-                animate={{ 
-                  width: i === currentPage ? 24 : 6,
-                  backgroundColor: i === currentPage ? "#ea580c" : "#e5e7eb"
-                }}
-                className="h-1.5 rounded-full"
-              />
-            ))}
-          </div>
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 px-2 md:px-0 mb-12">
+        {currentRecipes.map((recipe, i) => (
+          <motion.div
+            key={`${recipe.id}-${currentPage}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05, duration: 0.4 }}
+          >
+            <RecipeCard recipe={recipe} />
+          </motion.div>
+        ))}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-auto">
           <button 
-            onClick={prevPage}
-            className="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-900 hover:bg-orange-600 hover:text-white hover:border-orange-600 transition-all shadow-sm hover:shadow-xl hover:shadow-orange-200/40"
+            onClick={() => {
+              setCurrentPage(p => Math.max(1, p - 1));
+              window.scrollTo({ top: document.getElementById('jelajahi-menu')?.offsetTop || 500, behavior: 'smooth' });
+            }}
+            disabled={currentPage === 1}
+            className="w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold disabled:opacity-30 border border-gray-200 hover:bg-gray-50 transition-colors text-gray-700"
           >
             <ChevronLeft size={20} />
           </button>
+          
+          <div className="flex gap-2">
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  setCurrentPage(i + 1);
+                  window.scrollTo({ top: document.getElementById('jelajahi-menu')?.offsetTop || 500, behavior: 'smooth' });
+                }}
+                className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all duration-300 ${
+                  currentPage === i + 1 
+                    ? 'bg-orange-600 text-white shadow-lg shadow-orange-200/50 scale-110' 
+                    : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50 hover:border-gray-300'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
           <button 
-            onClick={nextPage}
-            className="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-900 hover:bg-orange-600 hover:text-white hover:border-orange-600 transition-all shadow-sm hover:shadow-xl hover:shadow-orange-200/40"
+            onClick={() => {
+              setCurrentPage(p => Math.min(totalPages, p + 1));
+              window.scrollTo({ top: document.getElementById('jelajahi-menu')?.offsetTop || 500, behavior: 'smooth' });
+            }}
+            disabled={currentPage === totalPages}
+            className="w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold disabled:opacity-30 border border-gray-200 hover:bg-gray-50 transition-colors text-gray-700"
           >
             <ChevronRight size={20} />
           </button>
         </div>
-      </div>
-
-      {/* Slide Container */}
-      <div className="relative">
-        {/* Desktop View (Animated Grid) */}
-        <div className="hidden lg:block relative">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentPage}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-              className="grid grid-cols-3 gap-8"
-            >
-              {currentRecipes.map((recipe, idx) => (
-                <div key={`${recipe.id}-${currentPage}`} className="h-full">
-                  <RecipeCard recipe={recipe} index={idx} />
-                </div>
-              ))}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Mobile/Tablet View (High Performance Touch Scroll) */}
-        <div 
-          ref={containerRef}
-          onScroll={handleScroll}
-          className="lg:hidden flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 px-2 pb-8 overscroll-x-contain"
-        >
-          {recipes.map((recipe, idx) => (
-            <div 
-              key={recipe.id} 
-              className="min-w-[280px] w-[85vw] sm:w-[50vw] snap-center shrink-0"
-            >
-              <RecipeCard recipe={recipe} index={idx} />
-            </div>
-          ))}
-        </div>
-        
-        {/* Progress indicator for Mobile */}
-        <div className="lg:hidden flex justify-center gap-1.5 mt-2">
-            {Array.from({ length: recipes.length }).map((_, i) => {
-              const isActive = Math.floor(i / pageSize) === currentPage;
-              // On mobile we show a simpler progress because there are more cards horizontally
-              return (
-                <div key={i} className={`h-1 rounded-full transition-all duration-300 ${i === currentPage ? 'w-4 bg-orange-600' : 'w-1 bg-gray-200'}`} />
-              );
-            })}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

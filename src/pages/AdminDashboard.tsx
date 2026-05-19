@@ -4,7 +4,7 @@ import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, deleteDoc
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Recipe, Suggestion, InstructionStep, UserProfile } from '../types';
-import { Plus, Trash2, MessageSquare, Save, X, Loader2, ChefHat, Upload, Image as ImageIcon, Users, Shield, ShieldAlert, Search } from 'lucide-react';
+import { Plus, Trash2, MessageSquare, Save, X, Loader2, Salad, Upload, Image as ImageIcon, Users, Shield, ShieldAlert, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatDate } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
@@ -215,7 +215,7 @@ export default function AdminDashboard() {
   if (loading) return (
     <div className="h-screen flex items-center justify-center">
         <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>
-            <ChefHat size={40} className="text-gray-900" />
+            <Salad size={40} className="text-gray-900" />
         </motion.div>
     </div>
   );
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
   if (profile?.role !== 'admin') {
     return (
       <div className="h-screen flex flex-col items-center justify-center p-4 text-center">
-        <ChefHat size={60} className="text-gray-200 mb-6" />
+        <Salad size={60} className="text-gray-200 mb-6" />
         <h2 className="text-2xl font-serif font-bold text-gray-900 mb-2">Akses Terbatas</h2>
         <p className="text-gray-500 max-w-xs">Halaman ini hanya dapat diakses oleh admin Dapursehat.</p>
         <Link to="/" className="mt-8 text-orange-600 font-bold uppercase text-xs tracking-widest hover:underline">Kembali ke Beranda</Link>
@@ -253,7 +253,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="w-12 h-12 bg-orange-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-orange-200">
-                <ChefHat size={24} />
+                <Salad size={24} />
               </div>
 
               <div>
@@ -270,7 +270,7 @@ export default function AdminDashboard() {
                 animate={{ rotate: 360 }}
                 transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
               >
-                <ChefHat size={80} />
+                <Salad size={80} />
               </motion.div>
             </div>
           </motion.div>

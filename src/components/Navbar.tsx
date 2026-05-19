@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { logout } from '../lib/firebase';
-import { LogOut, PlusCircle, ChefHat, Menu, X } from 'lucide-react';
+import { LogOut, PlusCircle, Salad, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function Navbar() {
@@ -25,7 +25,7 @@ export default function Navbar() {
             className="flex items-center gap-2"
           >
             <div className="w-10 h-10 bg-orange-600 rounded-2xl flex items-center justify-center text-white rotate-3 group-hover:rotate-0 transition-transform duration-300">
-               <ChefHat size={22} />
+               <Salad size={22} />
             </div>
             <span className="text-2xl font-serif font-black text-gray-900 tracking-tight">
               Dapur<span className="text-orange-600">Sehat</span>
@@ -83,7 +83,7 @@ export default function Navbar() {
                   onClick={() => setIsMenuOpen(false)}
                   className="text-sm font-bold text-gray-900 flex items-center gap-2"
                 >
-                  <ChefHat size={18} className="text-orange-600" />
+                  <Salad size={18} className="text-orange-600" />
                   Resep
                 </Link>
                 {isAdmin && (

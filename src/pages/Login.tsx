@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithGoogle } from '../lib/firebase';
 import { motion } from 'motion/react';
-import { ChefHat, Chrome } from 'lucide-react';
+import { Salad, Chrome } from 'lucide-react';
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
@@ -54,7 +54,7 @@ export default function Login() {
         <div className="mt-12 pt-8 border-t border-gray-50 flex flex-col gap-4">
             <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Admin & Member Portal</p>
             <div className="flex justify-center gap-4 text-gray-300">
-               <ChefHat size={20} />
+               <Salad size={20} />
             </div>
         </div>
       </motion.div>

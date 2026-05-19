@@ -10,7 +10,7 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { motion } from 'motion/react';
 import { 
-  ChevronLeft, ChevronRight, Clock, Users, Star, ChefHat, 
+  ChevronLeft, ChevronRight, Clock, Users, Star, Salad, 
   MessageCircle, Info, Timer, Trash2
 } from 'lucide-react';
 import CookingTimer from '../components/CookingTimer';
@@ -124,7 +124,7 @@ export default function RecipeDetail() {
   if (loading) return (
     <div className="h-screen flex items-center justify-center">
         <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>
-            <ChefHat size={40} className="text-[#5A5A40]" />
+            <Salad size={40} className="text-[#5A5A40]" />
         </motion.div>
     </div>
   );
@@ -251,9 +251,9 @@ export default function RecipeDetail() {
                   className="rounded-3xl bg-gray-50 border border-gray-100 overflow-hidden"
                 >
                   {recipe.instructions.map((step, idx) => (
-                    <SwiperSlide key={idx} className="p-5 md:p-12 pb-20">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start max-w-5xl mx-auto">
-                        <div className="order-2 lg:order-1 pt-4">
+                    <SwiperSlide key={idx} className="p-5 md:p-12 pb-40 md:pb-32">
+                      <div className={`grid grid-cols-1 ${step.image ? 'lg:grid-cols-2' : ''} gap-8 lg:gap-16 items-start max-w-5xl mx-auto`}>
+                        <div className={`${step.image ? 'order-2 lg:order-1' : ''} pt-4`}>
                           <div className="flex items-center gap-4 mb-6">
                             <div className="w-10 h-10 bg-gray-900 text-white rounded-xl flex items-center justify-center text-sm font-black shadow-lg">
                               {idx + 1}
@@ -292,18 +292,13 @@ export default function RecipeDetail() {
                           </div>
                         </div>
                         
-                        {step.image ? (
+                        {step.image && (
                           <div className="order-1 lg:order-2 w-full aspect-video lg:aspect-[4/3] rounded-3xl overflow-hidden border-4 border-white shadow-lg shadow-orange-100/50">
                             <img 
                               src={step.image} 
                               alt={`Langkah ${step.step}`} 
                               className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" 
                             />
-                          </div>
-                        ) : (
-                          <div className="order-1 lg:order-2 w-full aspect-video lg:aspect-[4/3] bg-gray-100 rounded-3xl flex flex-col items-center justify-center border-2 border-dashed border-gray-200">
-                            <ChefHat size={32} className="text-gray-200 mb-2" />
-                            <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Visual tidak tersedia</p>
                           </div>
                         )}
                       </div>
@@ -313,20 +308,22 @@ export default function RecipeDetail() {
 
                 {/* Custom Navigation Buttons - Positioned at bottom center flanking pagination */}
                 <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-24 md:gap-32 z-10 pointer-events-none">
-                  <button className="swiper-nav-prev pointer-events-auto w-8 h-8 md:w-10 md:h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-orange-600 hover:bg-orange-600 hover:text-white transition-all duration-300 disabled:opacity-0 cursor-pointer">
-                    <ChevronLeft size={20} />
-                  </button>
-                  <button className="swiper-nav-next pointer-events-auto w-8 h-8 md:w-10 md:h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-orange-600 hover:bg-orange-600 hover:text-white transition-all duration-300 disabled:opacity-0 cursor-pointer">
-                    <ChevronRight size={20} />
-                  </button>
+                  <div className="relative">
+                    <button className="swiper-nav-prev pointer-events-auto w-8 h-8 md:w-10 md:h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-orange-600 hover:bg-orange-600 hover:text-white transition-all duration-300 disabled:opacity-0 cursor-pointer shadow-lg shadow-orange-100/50">
+                        <ChevronLeft size={20} />
+                    </button>
+                    <div className="absolute -inset-1 rounded-2xl border-2 border-orange-500/10 pointer-events-none" />
+                  </div>
+                  <div className="relative">
+                    <button className="swiper-nav-next pointer-events-auto w-8 h-8 md:w-10 md:h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-orange-600 hover:bg-orange-600 hover:text-white transition-all duration-300 disabled:opacity-0 cursor-pointer shadow-lg shadow-orange-100/50">
+                        <ChevronRight size={20} />
+                    </button>
+                    <div className="absolute -inset-1 rounded-2xl border-2 border-orange-500/10 pointer-events-none" />
+                  </div>
                 </div>
               </div>
               
-              <div className="mt-8 flex items-center justify-center gap-4 py-4 border-t border-gray-100">
-                <div className="w-12 h-1 bg-orange-600 rounded-full"></div>
-                <div className="w-12 h-1 bg-gray-100 rounded-full"></div>
-                <div className="w-12 h-1 bg-gray-100 rounded-full"></div>
-              </div>
+
             </div>
           </div>
         </motion.div>

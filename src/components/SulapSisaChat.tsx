@@ -75,12 +75,16 @@ export default function SulapSisaChat({ isOpen, onToggle }: { isOpen: boolean, o
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#F0FDF4]">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[90%] px-4 py-3 rounded-2xl shadow-sm text-sm ${
+                  <div className={`max-w-[90%] px-4 py-3 rounded-2xl shadow-sm text-[15px] ${
                     msg.role === 'user' 
                     ? 'bg-emerald-600 text-white rounded-tr-none' 
-                    : 'bg-white text-gray-800 border border-emerald-100 rounded-tl-none'
+                    : 'bg-white text-gray-900 border border-emerald-100 rounded-tl-none'
                   }`}>
-                    <div className="prose prose-sm max-w-none prose-emerald prose-headings:font-bold prose-headings:text-emerald-900 prose-p:leading-relaxed prose-li:my-0 break-words">
+                    <div className={`prose max-w-none prose-p:leading-relaxed break-words ${
+                      msg.role === 'user'
+                      ? 'prose-invert text-white prose-p:text-white prose-strong:text-white'
+                      : 'prose-emerald text-gray-900 prose-headings:font-bold prose-headings:text-emerald-900 prose-p:text-gray-900 prose-strong:text-emerald-900 prose-li:text-gray-900 prose-ul:text-gray-900 prose-ol:text-gray-900'
+                    }`}>
                       <ReactMarkdown>{msg.text}</ReactMarkdown>
                     </div>
                   </div>

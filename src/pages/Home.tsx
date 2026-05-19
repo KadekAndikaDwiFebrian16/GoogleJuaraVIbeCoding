@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { collection, query, getDocs, orderBy } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Recipe } from '../types';
 import SuggestionForm from '../components/SuggestionForm';
 import RecipeCarousel from '../components/RecipeCarousel';
 import RecipeSlideGroup from '../components/RecipeSlideGroup';
-import { Search, Loader2, AlertCircle, Filter, X as CloseIcon, Leaf, Coffee, Carrot, Sparkles, ChefHat } from 'lucide-react';
+import { Search, AlertCircle, Filter, X as CloseIcon, Leaf, Coffee, Carrot, Sparkles, Salad } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import { useSearchParams } from 'react-router-dom';
 import { useUI } from '../context/UIContext';
@@ -133,7 +133,6 @@ export default function Home() {
 
   const { scrollY } = useScroll();
   const headerOpacity = useTransform(scrollY, [0, 100], [0, 1]);
-  const headerBlur = useTransform(scrollY, [0, 100], [0, 8]);
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-64px)] relative">
@@ -226,13 +225,12 @@ export default function Home() {
                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-600 opacity-80">Makan Kapan?</h3>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                    {CATEGORIES.map((cat, i) => (
+                    {CATEGORIES.map((cat) => (
                       <motion.button
                         key={cat.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        whileHover={{ scale: 1.02, x: 5 }}
+                        transition={{ duration: 0.2 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => {
                           const newParams = new URLSearchParams(searchParams);
@@ -240,25 +238,23 @@ export default function Home() {
                           setSearchParams(newParams);
                           setIsFilterOpen(false);
                         }}
-                        className={`relative flex items-center gap-5 p-4 md:p-6 rounded-[1.5rem] md:rounded-[2.5rem] font-bold transition-all border-2 ${
+                        className={`relative flex items-center gap-5 p-4 md:p-6 rounded-[1.5rem] md:rounded-[2.5rem] font-bold transition-all duration-300 md:hover:-translate-y-1 md:hover:shadow-lg border-2 ${
                           selectedCategory === cat.id 
-                          ? 'bg-orange-600 text-white border-orange-600' 
-                          : 'bg-gray-50/50 text-gray-700 border-transparent hover:bg-white hover:border-orange-100 shadow-sm'
+                          ? 'bg-orange-600 text-white border-orange-600 shadow-orange-200/50' 
+                          : 'bg-white md:bg-gray-50/50 text-gray-800 border-gray-100 md:border-transparent md:hover:bg-white md:hover:border-orange-100 shadow-sm'
                         }`}
                       >
-                        <span className="text-2xl md:text-3xl">
+                        <span className="text-2xl md:text-3xl drop-shadow-sm">
                           {cat.id === 'pagi' && '🍳'}
                           {cat.id === 'siang' && '🍲'}
                           {cat.id === 'sore' && '☕'}
                           {cat.id === 'malam' && '🌙'}
                           {cat.id === 'semua' && '🥗'}
                         </span>
-                        <span className="text-sm md:text-base tracking-tight">{cat.label}</span>
+                        <span className="text-sm md:text-base tracking-tight font-extrabold">{cat.label}</span>
                         {selectedCategory === cat.id && (
-                          <motion.div 
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="ml-auto w-2 h-2 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)]" 
+                          <div 
+                            className="ml-auto w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.9)]" 
                           />
                         )}
                       </motion.button>
@@ -272,12 +268,12 @@ export default function Home() {
                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-600 opacity-80">Kebutuhan Spesial</h3>
                   </div>
                   <div className="flex flex-col gap-2.5">
-                    {dynamicHealthConditions.map((cond, i) => (
+                    {dynamicHealthConditions.map((cond) => (
                       <motion.button
                         key={cond}
-                        initial={{ opacity: 0, x: 20 }}
+                        initial={{ opacity: 0, x: 10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.05 }}
+                        transition={{ duration: 0.2 }}
                         whileHover={{ x: 6, backgroundColor: selectedCondition === cond ? "" : "rgba(249, 115, 22, 0.05)" }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => {
@@ -290,18 +286,16 @@ export default function Home() {
                           setSearchParams(newParams);
                           setIsFilterOpen(false);
                         }}
-                        className={`relative flex items-center justify-between gap-4 text-xs md:text-sm p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] font-bold transition-all group border-2 ${
+                        className={`relative flex items-center justify-between gap-4 text-xs md:text-sm p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] font-bold transition-all duration-300 md:hover:translate-x-2 border-2 ${
                           selectedCondition === cond
                           ? 'bg-orange-600 text-white border-orange-600 shadow-xl shadow-orange-100/50'
-                          : 'bg-gray-50/50 text-gray-500 hover:text-gray-900 border-transparent'
+                          : 'bg-white md:bg-gray-50/50 text-gray-500 hover:text-gray-900 border-gray-100 md:border-transparent md:hover:bg-orange-50/30'
                         }`}
                       >
                         <span className="tracking-tight text-sm md:text-lg font-black">{cond}</span>
                         {selectedCondition === cond && (
-                          <motion.div 
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)]" 
+                          <div 
+                            className="bg-white w-2.5 h-2.5 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)]" 
                           />
                         )}
                       </motion.button>
@@ -318,7 +312,7 @@ export default function Home() {
                         <Sparkles size={120} />
                       </motion.div>
                       <h4 className="font-serif font-black text-base md:text-xl mb-1 flex items-center gap-2">
-                        <ChefHat size={20} className="text-orange-600" />
+                        <Salad size={20} className="text-orange-600" />
                         Bingung pilih menu?
                       </h4>
                       <p className="text-[9px] md:text-xs text-orange-800/60 font-bold leading-relaxed uppercase tracking-widest">

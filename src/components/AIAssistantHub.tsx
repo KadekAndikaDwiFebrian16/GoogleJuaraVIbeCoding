@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChefHat, Utensils, X, Sparkles, Calendar } from 'lucide-react';
+import { Salad, Utensils, X, Sparkles, Calendar } from 'lucide-react';
 import { useUI } from '../context/UIContext';
 
 export default function AIAssistantHub({ 
@@ -49,7 +49,7 @@ export default function AIAssistantHub({
               className="px-4 py-4 rounded-3xl text-left text-sm font-bold text-gray-900 transition-all flex items-center gap-4 group"
             >
               <div className="w-11 h-11 rounded-2xl bg-orange-100 flex items-center justify-center shadow-inner md:group-hover:rotate-6 transition-transform">
-                <ChefHat size={22} className="text-orange-600" />
+                <Salad size={22} className="text-orange-600" />
               </div>
               <div className="flex flex-col">
                 <span className="font-black text-gray-900">Tanya Chef AI</span>

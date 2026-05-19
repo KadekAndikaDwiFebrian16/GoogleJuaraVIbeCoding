@@ -75,12 +75,16 @@ export default function MealPlannerChat({ isOpen, onToggle }: { isOpen: boolean,
           <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#F8FAFA]">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[90%] px-4 py-3 rounded-2xl shadow-sm text-sm leading-relaxed ${
+                <div className={`max-w-[90%] px-4 py-3 rounded-2xl shadow-sm text-[15px] leading-relaxed ${
                   msg.role === 'user' 
                   ? 'bg-emerald-600 text-white' 
-                  : 'bg-white text-gray-800 border border-emerald-50'
+                  : 'bg-white text-gray-900 border border-emerald-100'
                 }`}>
-                  <div className="prose prose-sm max-w-none prose-emerald prose-p:leading-relaxed prose-li:my-1">
+                  <div className={`prose max-w-none prose-p:leading-relaxed prose-li:my-1 ${
+                    msg.role === 'user' 
+                    ? 'prose-invert text-white prose-p:text-white prose-strong:text-white' 
+                    : 'prose-emerald text-gray-900 prose-p:text-gray-900 prose-headings:text-gray-900 prose-headings:font-bold prose-strong:text-emerald-900 prose-li:text-gray-900 prose-ul:text-gray-900 prose-ol:text-gray-900'
+                  }`}>
                     <ReactMarkdown>{msg.text}</ReactMarkdown>
                   </div>
                 </div>
