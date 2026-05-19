@@ -136,33 +136,12 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-64px)] relative">
-      {/* Distributed Floating Elements Background - Disabled on mobile for performance */}
+      {/* Minimal Floating Elements Background */}
       <div className="hidden md:block">
         <FloatingElement x={5} y={15} rotate={15} delay={0}><Leaf size={56} className="text-emerald-500" /></FloatingElement>
         <FloatingElement x={85} y={25} rotate={-20} delay={1}><Carrot size={64} className="text-orange-500" /></FloatingElement>
         <FloatingElement x={15} y={65} rotate={10} delay={2}><Coffee size={48} className="text-amber-500" /></FloatingElement>
         <FloatingElement x={80} y={75} rotate={-15} delay={1.5}><Sparkles size={44} className="text-yellow-400" /></FloatingElement>
-        
-        {/* Thorough Carrot Distribution */}
-        <FloatingElement x={45} y={10} rotate={10} delay={0.5}><Carrot size={40} className="text-orange-400" /></FloatingElement>
-        <FloatingElement x={10} y={85} rotate={-10} delay={3}><Carrot size={52} className="text-orange-300" /></FloatingElement>
-        <FloatingElement x={55} y={70} rotate={45} delay={2.5}><Carrot size={32} className="text-orange-500" /></FloatingElement>
-        <FloatingElement x={90} y={80} rotate={160} delay={4}><Carrot size={60} className="text-orange-400" /></FloatingElement>
-        <FloatingElement x={30} y={40} rotate={30} delay={1.2}><Carrot size={44} className="text-orange-200" /></FloatingElement>
-        <FloatingElement x={70} y={50} rotate={-45} delay={0.8}><Carrot size={38} className="text-orange-400" /></FloatingElement>
-        <FloatingElement x={20} y={20} rotate={190} delay={3.5}><Carrot size={72} className="text-orange-600/50" /></FloatingElement>
-        <FloatingElement x={60} y={15} rotate={120} delay={2.2}><Carrot size={28} className="text-orange-500" /></FloatingElement>
-        <FloatingElement x={42} y={85} rotate={10} delay={1.7}><Carrot size={48} className="text-orange-300" /></FloatingElement>
-        <FloatingElement x={75} y={10} rotate={-30} delay={4.2}><Carrot size={34} className="text-orange-400" /></FloatingElement>
-        <FloatingElement x={12} y={50} rotate={80} delay={2.8}><Carrot size={42} className="text-orange-500" /></FloatingElement>
-        <FloatingElement x={88} y={45} rotate={210} delay={1.1}><Carrot size={50} className="text-orange-400" /></FloatingElement>
-        <FloatingElement x={50} y={55} rotate={-100} delay={3.1}><Carrot size={36} className="text-orange-200" /></FloatingElement>
-        <FloatingElement x={25} y={75} rotate={20} delay={1.5}><Carrot size={40} className="text-orange-300" /></FloatingElement>
-        <FloatingElement x={65} y={85} rotate={-40} delay={0.4}><Carrot size={45} className="text-orange-400" /></FloatingElement>
-        <FloatingElement x={35} y={5} rotate={70} delay={2.6}><Carrot size={30} className="text-orange-500" /></FloatingElement>
-        <FloatingElement x={5} y={45} rotate={15} delay={1.9}><Carrot size={55} className="text-orange-400" /></FloatingElement>
-        <FloatingElement x={95} y={15} rotate={240} delay={3.7}><Carrot size={42} className="text-orange-300" /></FloatingElement>
-        <FloatingElement x={50} y={30} rotate={45} delay={1.3}><Carrot size={36} className="text-orange-100" /></FloatingElement>
       </div>
 
       {/* Permanent Toggle Button (PC & Mobile) */}

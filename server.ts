@@ -150,7 +150,7 @@ Jangan pernah memberikan informasi yang membahayakan kesehatan. Berikan takaran 
       }
 
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.1-flash-lite",
         contents: question,
         config: {
           systemInstruction: systemInstruction,
