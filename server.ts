@@ -2,7 +2,16 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+import webPush from "web-push";
 import "dotenv/config";
+
+// Generate VAPID keys for Web Push once per server start
+const vapidKeys = webPush.generateVAPIDKeys();
+webPush.setVapidDetails(
+  'mailto:febriandwiiiii@gmail.com',
+  vapidKeys.publicKey,
+  vapidKeys.privateKey
+);
 
 async function startServer() {
   const app = express();
@@ -13,6 +22,44 @@ async function startServer() {
   // API routes
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // Web Push API Routes
+  const scheduledPushes: Record<string, NodeJS.Timeout> = {};
+
+  app.get("/api/vapidPublicKey", (_req, res) => {
+    res.json({ publicKey: vapidKeys.publicKey });
+  });
+
+  app.post("/api/schedule-push", (req, res) => {
+    const { subscription, payload, delayMs, timerId } = req.body;
+    
+    if (!subscription || !payload || typeof delayMs !== 'number' || !timerId) {
+       res.status(400).json({ error: "Invalid payload or subscription data" });
+       return;
+    }
+
+    if (scheduledPushes[timerId]) {
+      clearTimeout(scheduledPushes[timerId]);
+    }
+
+    // Schedule the push notification
+    scheduledPushes[timerId] = setTimeout(() => {
+      webPush.sendNotification(subscription, JSON.stringify(payload))
+        .catch(err => console.error("Error sending push notification:", err));
+      delete scheduledPushes[timerId];
+    }, delayMs);
+
+    res.json({ status: "scheduled", delayMs, timerId });
+  });
+
+  app.post("/api/cancel-push", (req, res) => {
+    const { timerId } = req.body;
+    if (timerId && scheduledPushes[timerId]) {
+      clearTimeout(scheduledPushes[timerId]);
+      delete scheduledPushes[timerId];
+    }
+    res.json({ status: "cancelled" });
   });
 
   // Initialize AI client

@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, Calendar, Loader2 } from 'lucide-react';
+import { X, Send, Calendar, Loader2, ShoppingBag } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { useNavigate } from 'react-router-dom';
 import { askAssistant } from '../services/aiService';
+import { useAuth } from '../context/AuthContext';
+import { db } from '../lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 interface Message {
   role: 'ai' | 'user';
@@ -10,12 +14,14 @@ interface Message {
 }
 
 export default function MealPlannerChat({ isOpen, onToggle }: { isOpen: boolean, onToggle: () => void }) {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     { role: 'ai', text: 'Halo! Saya AI Smart Meal Planner. Berikan saya target kalori Anda, kondisi kesehatan (misal: diabetes atau hipertensi), atau preferensi diet (misal: vegan, keto, rendah karbo), dan saya akan buatkan rencana makan 3 hari serta daftar belanjaannya untuk Anda!' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -42,6 +48,110 @@ export default function MealPlannerChat({ isOpen, onToggle }: { isOpen: boolean,
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSaveShoppingList = async (items: string[]) => {
+    try {
+      const existingStr = localStorage.getItem('dapursehat_shopping_list');
+      let existingItems = existingStr ? JSON.parse(existingStr) : [];
+      
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, 'shoppingLists', user.uid));
+          if (userDoc.exists()) {
+             const data = userDoc.data();
+             existingItems = data.items || [];
+          }
+        } catch(e) {
+           console.error("Failed to read from firebase inside chat", e);
+        }
+      }
+
+      const newItems = items.map(item => ({ id: Date.now().toString() + Math.random(), name: item, checked: false }));
+      const merged = [...existingItems, ...newItems];
+
+      localStorage.setItem('dapursehat_shopping_list', JSON.stringify(merged));
+      
+      if (user) {
+        try {
+          await setDoc(doc(db, 'shoppingLists', user.uid), { items: merged });
+        } catch(e) {
+          console.error("Failed to update firestore", e);
+        }
+      }
+
+      window.dispatchEvent(new Event('shopping_list_updated'));
+      onToggle(); // Close chat
+      navigate('/shopping-list');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const renderMessageContent = (msg: Message) => {
+    const isAI = msg.role === 'ai';
+    let shoppingItems: string[] = [];
+
+    if (isAI) {
+      // Find the shopping list section, looking for Daftar Belanjaan loosely
+      const listIndex = msg.text.toLowerCase().indexOf('daftar belanjaan');
+      if (listIndex !== -1) {
+        const afterHeader = msg.text.slice(listIndex);
+        const nextHeaderMatch = afterHeader.match(/\n## /);
+        const listText = nextHeaderMatch ? afterHeader.slice(0, nextHeaderMatch.index) : afterHeader;
+
+        const lines = listText.split('\n');
+        for (const line of lines) {
+          const trimmed = line.trim();
+          let itemText = '';
+          
+          if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+            itemText = trimmed.substring(2).trim();
+          } else if (/^\d+\.\s/.test(trimmed)) {
+            itemText = trimmed.replace(/^\d+\.\s/, '').trim();
+          }
+
+          if (itemText) {
+            // Check if it's likely a category header (e.g. **Sumber Protein:**)
+            if (!itemText.startsWith('**') && !itemText.endsWith('**') && !itemText.includes('**:') && itemText.length > 0) {
+              // Strip out any trailing/leading asterisks 
+              let cleanItem = itemText.replace(/^\*+|\*+$/g, '').trim();
+              if (cleanItem && !cleanItem.includes('Kumpulkan bahan-bahan')) {
+                shoppingItems.push(cleanItem);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return (
+      <div className={`max-w-[90%] px-4 py-3 rounded-2xl shadow-sm text-[15px] leading-relaxed ${
+        msg.role === 'user' 
+        ? 'bg-emerald-600 text-white' 
+        : 'bg-white text-gray-900 border border-emerald-100'
+      }`}>
+        <div className={`prose max-w-none prose-p:leading-relaxed prose-li:my-1 ${
+          msg.role === 'user' 
+          ? 'prose-invert text-white prose-p:text-white prose-strong:text-white' 
+          : 'prose-emerald text-gray-900 prose-p:text-gray-900 prose-headings:text-gray-900 prose-headings:font-bold prose-strong:text-emerald-900 prose-li:text-gray-900 prose-ul:text-gray-900 prose-ol:text-gray-900'
+        }`}>
+          <ReactMarkdown>{msg.text}</ReactMarkdown>
+        </div>
+        
+        {shoppingItems.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-emerald-100 flex justify-end">
+            <button
+              onClick={() => handleSaveShoppingList(shoppingItems)}
+              className="flex items-center gap-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-4 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm"
+            >
+              <ShoppingBag size={16} />
+              Simpan Bahan Makanan Untuk Dibeli
+            </button>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -75,19 +185,7 @@ export default function MealPlannerChat({ isOpen, onToggle }: { isOpen: boolean,
           <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#F8FAFA]">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[90%] px-4 py-3 rounded-2xl shadow-sm text-[15px] leading-relaxed ${
-                  msg.role === 'user' 
-                  ? 'bg-emerald-600 text-white' 
-                  : 'bg-white text-gray-900 border border-emerald-100'
-                }`}>
-                  <div className={`prose max-w-none prose-p:leading-relaxed prose-li:my-1 ${
-                    msg.role === 'user' 
-                    ? 'prose-invert text-white prose-p:text-white prose-strong:text-white' 
-                    : 'prose-emerald text-gray-900 prose-p:text-gray-900 prose-headings:text-gray-900 prose-headings:font-bold prose-strong:text-emerald-900 prose-li:text-gray-900 prose-ul:text-gray-900 prose-ol:text-gray-900'
-                  }`}>
-                    <ReactMarkdown>{msg.text}</ReactMarkdown>
-                  </div>
-                </div>
+                {renderMessageContent(msg)}
               </div>
             ))}
             {loading && (

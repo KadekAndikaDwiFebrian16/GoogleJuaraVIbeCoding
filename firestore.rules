@@ -89,5 +89,10 @@ service cloud.firestore {
       allow create: if isEmailVerified() && isValidSuggestion(request.resource.data);
       allow delete: if isAdmin() && isValidId(suggestionId);
     }
+    
+    // --- Collection: ShoppingLists ---
+    match /shoppingLists/{userId} {
+      allow read, write: if isOwner(userId);
+    }
   }
 }

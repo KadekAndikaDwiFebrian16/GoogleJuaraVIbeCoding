@@ -88,6 +88,14 @@
       },
       "required": ["userId", "title"]
     },
+    "ShoppingList": {
+      "title": "Shopping List",
+      "description": "User's shopping list items",
+      "type": "object",
+      "properties": {
+        "items": { "type": "array" }
+      }
+    },
     "AdminAccount": {
       "title": "Admin",
       "description": "Admin accounts records",
@@ -113,6 +121,10 @@
     "suggestions": {
       "schema": "Suggestion",
       "description": "Recipe suggestions from users"
+    },
+    "shoppingLists": {
+      "schema": "ShoppingList",
+      "description": "User's individual shopping list"
     },
     "admins": {
         "schema": "AdminAccount",

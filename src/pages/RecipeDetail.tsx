@@ -133,7 +133,6 @@ export default function RecipeDetail() {
 
   return (
     <div className="bg-[#FAFAF8] min-h-screen pb-20 relative">
-      <CookingTimer />
       {/* Hero Section */}
       <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
         <motion.img 
@@ -272,6 +271,15 @@ export default function RecipeDetail() {
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => {
+                                // Unlock audio on iOS strictly during direct user interaction
+                                const dummyAudio = new Audio("data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq==");
+                                dummyAudio.loop = true;
+                                dummyAudio.play().catch(() => {});
+                                (window as any).backgroundSilentAudio = dummyAudio;
+
+                                if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                                  Notification.requestPermission();
+                                }
                                 window.dispatchEvent(new CustomEvent('start-cooking-timer', { 
                                   detail: { duration: step.duration } 
                                 }));

@@ -13,6 +13,9 @@ import SulapSisaChat from './components/SulapSisaChat';
 import MealPlannerChat from './components/MealPlannerChat';
 import Navbar from './components/Navbar';
 import Loader from './components/Loader';
+import CookingTimer from './components/CookingTimer';
+
+import ShoppingList from './pages/ShoppingList';
 
 const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) => {
   const { user, loading, isAdmin } = useAuth();
@@ -42,6 +45,13 @@ function AnimatedRoutes() {
           <ProtectedRoute>
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
               <Home />
+            </motion.div>
+          </ProtectedRoute>
+        } />
+        <Route path="/shopping-list" element={
+          <ProtectedRoute>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+              <ShoppingList />
             </motion.div>
           </ProtectedRoute>
         } />
@@ -151,6 +161,7 @@ function AppContent() {
                 }
               }}
             />
+            <CookingTimer />
           </>
         )}
       </div>

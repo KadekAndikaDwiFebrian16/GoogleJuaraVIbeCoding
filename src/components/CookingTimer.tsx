@@ -1,9 +1,39 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Timer } from 'lucide-react';
+import { Play, Pause, RotateCcw, Timer, Share } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUI } from '../context/UIContext';
+import { useLocation } from 'react-router-dom';
+
+function urlB64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+const getPushSubscription = async () => {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+  const registration = await navigator.serviceWorker.ready;
+  let subscription = await registration.pushManager.getSubscription();
+  if (!subscription) {
+    const response = await fetch('/api/vapidPublicKey').catch(() => null);
+    if (!response) return null;
+    const vapidPublicKey = (await response.json()).publicKey;
+    const convertedVapidKey = urlB64ToUint8Array(vapidPublicKey);
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: convertedVapidKey
+    });
+  }
+  return subscription;
+};
 
 export default function CookingTimer() {
+  const location = useLocation();
   const { activeComponent, setActiveComponent } = useUI();
   const isOpen = activeComponent === 'timer';
   const setIsOpen = (open: boolean) => setActiveComponent(open ? 'timer' : null);
@@ -12,10 +42,84 @@ export default function CookingTimer() {
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const [showIOSWarning, setShowIOSWarning] = useState(false);
+  
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const targetTimeRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-
   const alarmIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const silentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const webPushTimerIdRef = useRef<string | null>(null);
+
+  const scheduleWebPush = async (delayMs: number) => {
+    try {
+      const subscription = await getPushSubscription();
+      if (subscription) {
+        const timerId = Date.now().toString() + Math.random().toString(36);
+        webPushTimerIdRef.current = timerId;
+        const res = await fetch('/api/schedule-push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subscription,
+            delayMs,
+            timerId,
+            payload: {
+              title: 'Waktu Memasak Habis! 🍜',
+              body: 'Timer Anda telah selesai. Segera periksa masakan Anda!',
+              url: window.location.href
+            }
+          })
+        });
+        if (!res.ok) {
+          webPushTimerIdRef.current = null;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to schedule web push', e);
+      webPushTimerIdRef.current = null;
+    }
+  };
+
+  const cancelWebPush = async () => {
+    if (webPushTimerIdRef.current) {
+      await fetch('/api/cancel-push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timerId: webPushTimerIdRef.current })
+      }).catch(() => {}).finally(() => {
+        webPushTimerIdRef.current = null;
+      });
+    }
+  };
+
+  useEffect(() => {
+    // Create a 1-second silent audio element to keep iOS Safari alive in the background
+    const audio = new Audio();
+    audio.src = "data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq==";
+    audio.loop = true;
+    silentAudioRef.current = audio;
+  }, []);
+
+  const requestNotificationPermission = async () => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+    // Show warning on iOS if not a standalone app because iOS Safari blocks notifications 
+    // unless added to the Home Screen.
+    if (isIOS && !isStandalone) {
+      setShowIOSWarning(true);
+    }
+
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+
+      try {
+        await Notification.requestPermission();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
 
   const ensureAudioContext = async () => {
     try {
@@ -32,39 +136,85 @@ export default function CookingTimer() {
 
   const playSingleBeep = () => {
     try {
-      ensureAudioContext();
       const ctx = audioContextRef.current;
-      if (!ctx) return;
+      if (!ctx || ctx.state !== 'running') return;
       const t = ctx.currentTime;
       
-      const playBeep = (timeOffset: number) => {
+      const playTone = (freq: number, start: number, duration: number) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'square';
-        osc.frequency.setValueAtTime(880, t + timeOffset); // A5
-        gain.gain.setValueAtTime(0, t + timeOffset);
-        gain.gain.linearRampToValueAtTime(0.3, t + timeOffset + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.01, t + timeOffset + 0.2);
+        osc.frequency.setValueAtTime(freq, t + start);
+        gain.gain.setValueAtTime(0, t + start);
+        gain.gain.linearRampToValueAtTime(0.4, t + start + Math.min(0.05, duration/2));
+        gain.gain.exponentialRampToValueAtTime(0.01, t + start + duration);
         osc.connect(gain);
         gain.connect(ctx.destination);
-        osc.start(t + timeOffset);
-        osc.stop(t + timeOffset + 0.2);
+        osc.start(t + start);
+        osc.stop(t + start + duration);
       };
 
-      playBeep(0);
-      playBeep(0.25);
+      // Play a ringing alarm pattern
+      playTone(880, 0, 0.15); // A5
+      playTone(1046, 0.2, 0.15); // C6
+      playTone(880, 0.4, 0.15); // A5
+      playTone(1046, 0.6, 0.15); // C6
     } catch (e) {
       console.error('Audio error:', e);
     }
   };
 
-  const playAlarm = () => {
+  const playAlarm = async (options?: { skipNotification?: boolean }) => {
     if (alarmIntervalRef.current) return;
+    await ensureAudioContext();
     playSingleBeep();
     alarmIntervalRef.current = setInterval(() => {
       playSingleBeep();
-    }, 1000);
+    }, 1500);
+
+    // Show Notification outside browser
+    if (!options?.skipNotification && 'Notification' in window && Notification.permission === 'granted') {
+      try {
+        if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
+          navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification('Waktu Memasak Habis! 🍜', {
+              body: 'Timer Anda telah selesai. Segera periksa masakan Anda!',
+              requireInteraction: true,
+              vibrate: [200, 100, 200, 100, 200],
+              tag: 'cooking-timer'
+            }).catch(e => {
+               // Fallback if ServiceWorker approach fails
+               createFallbackNotification();
+            });
+          }).catch(e => createFallbackNotification());
+        } else {
+          createFallbackNotification();
+        }
+      } catch (e) {
+        console.error("Notification error:", e);
+      }
+    }
   };
+
+  const createFallbackNotification = () => {
+    try {
+      const notification = new Notification('Waktu Memasak Habis! 🍜', {
+        body: 'Timer Anda telah selesai. Segera periksa masakan Anda!',
+        requireInteraction: true,
+        vibrate: [200, 100, 200, 100, 200],
+        tag: 'cooking-timer'
+      });
+      notification.onclick = () => {
+        window.focus();
+        stopAlarm();
+        setIsFinished(false);
+        setIsOpen(true);
+        notification.close();
+      };
+    } catch(e) {
+        console.error("Fallback notification error:", e);
+    }
+  }
 
   const stopAlarm = () => {
     if (alarmIntervalRef.current) {
@@ -74,46 +224,109 @@ export default function CookingTimer() {
   };
 
   useEffect(() => {
-    const handleStartTimer = (e: any) => {
+    const handleStartTimer = async (e: any) => {
       const { duration } = e.detail;
       if (duration) {
+        silentAudioRef.current?.play().catch(() => {});
+        await ensureAudioContext();
+        
+        requestNotificationPermission();
         setMinutes(duration);
         setSeconds(0);
         setIsActive(true);
         setIsOpen(true);
         setIsFinished(false);
+        const durationMs = (duration * 60) * 1000;
+        targetTimeRef.current = Date.now() + durationMs;
+        scheduleWebPush(durationMs);
+      }
+    };
+
+    const handleSWMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'TIMER_FINISHED') {
+        stopAlarm();
+        setIsFinished(false);
+        setIsOpen(true);
       }
     };
 
     window.addEventListener('start-cooking-timer', handleStartTimer as EventListener);
-    return () => window.removeEventListener('start-cooking-timer', handleStartTimer as EventListener);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleSWMessage);
+    }
+    
+    return () => {
+      window.removeEventListener('start-cooking-timer', handleStartTimer as EventListener);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleSWMessage);
+      }
+    };
   }, []);
 
   useEffect(() => {
     if (isActive) {
+      if (!targetTimeRef.current) {
+        targetTimeRef.current = Date.now() + (minutes * 60 + seconds) * 1000;
+      }
+
       intervalRef.current = setInterval(() => {
-        if (seconds > 0) {
-          setSeconds(seconds - 1);
-        } else if (minutes > 0) {
-          setMinutes(minutes - 1);
-          setSeconds(59);
+        const now = Date.now();
+        const diff = Math.max(0, targetTimeRef.current! - now);
+        
+        if (diff > 0) {
+          const totalSecs = Math.ceil(diff / 1000);
+          setMinutes(Math.floor(totalSecs / 60));
+          setSeconds(totalSecs % 60);
         } else {
           setIsActive(false);
           setIsFinished(true);
-          playAlarm();
+          setMinutes(0);
+          setSeconds(0);
+          targetTimeRef.current = null;
+          silentAudioRef.current?.pause();
+          if ((window as any).backgroundSilentAudio) {
+            (window as any).backgroundSilentAudio.pause();
+          }
+          const hasWebPush = !!webPushTimerIdRef.current;
+          playAlarm({ skipNotification: hasWebPush });
+          webPushTimerIdRef.current = null;
         }
-      }, 1000);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
+      }, 200); // Higher frequency check for accuracy
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      targetTimeRef.current = null;
     }
+    
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      stopAlarm();
     };
   }, [isActive, minutes, seconds]);
 
   const toggleTimer = async () => {
+    if (!isActive) {
+      silentAudioRef.current?.play().catch(() => {});
+      if ((window as any).backgroundSilentAudio) {
+        (window as any).backgroundSilentAudio.play().catch(() => {});
+      }
+    } else {
+      silentAudioRef.current?.pause();
+      if ((window as any).backgroundSilentAudio) {
+        (window as any).backgroundSilentAudio.pause();
+      }
+    }
+    
+    // Request permission synchronously before any awaits!
+    requestNotificationPermission();
     await ensureAudioContext();
+    
+    if (!isActive) {
+      const remainingMs = (minutes * 60 + seconds) * 1000;
+      targetTimeRef.current = Date.now() + remainingMs;
+      scheduleWebPush(remainingMs);
+    } else {
+      targetTimeRef.current = null;
+      cancelWebPush();
+    }
     setIsActive(!isActive);
   };
   
@@ -123,7 +336,13 @@ export default function CookingTimer() {
     setIsFinished(false);
     setMinutes(5);
     setSeconds(0);
+    targetTimeRef.current = null;
     stopAlarm();
+    cancelWebPush();
+    silentAudioRef.current?.pause();
+    if ((window as any).backgroundSilentAudio) {
+      (window as any).backgroundSilentAudio.pause();
+    }
   };
 
   const adjustTime = (type: 'min' | 'sec', amount: number) => {
@@ -133,16 +352,19 @@ export default function CookingTimer() {
     } else {
       let newSec = seconds + amount;
       if (newSec >= 60) {
-        setMinutes(minutes + 1);
-        setSeconds(newSec - 60);
+        setMinutes(minutes + Math.floor(newSec / 60));
+        setSeconds(newSec % 60);
       } else if (newSec < 0 && minutes > 0) {
-        setMinutes(minutes - 1);
-        setSeconds(59);
+        setMinutes(Math.max(0, minutes - 1));
+        setSeconds(60 + newSec);
       } else {
         setSeconds(Math.max(0, newSec));
       }
     }
   };
+
+  const isRecipePage = location.pathname.startsWith('/recipe');
+  if (!isRecipePage) return null;
 
   return (
     <div className="fixed bottom-6 left-6 z-[120]">
@@ -220,6 +442,19 @@ export default function CookingTimer() {
                 >
                   Waktu Habis! 🍜
                 </motion.p>
+              )}
+
+              {showIOSWarning && !isFinished && (
+                 <motion.div
+                   initial={{ opacity: 0 }}
+                   animate={{ opacity: 1 }}
+                   className="mt-6 p-4 bg-orange-50 rounded-xl"
+                 >
+                   <p className="text-orange-800 text-[10px] font-bold uppercase tracking-widest mb-1">Penting untuk iOS</p>
+                   <p className="text-orange-600/80 text-[10px] leading-relaxed">
+                     Agar notifikasi dan alarm berfungsi penuh, ketuk ikon bagikan <Share size={10} className="inline mx-1" /> di bawah layar Safari Anda, lalu pilih <strong>"Tambah ke Layar Utama"</strong>.
+                   </p>
+                 </motion.div>
               )}
             </div>
           </motion.div>

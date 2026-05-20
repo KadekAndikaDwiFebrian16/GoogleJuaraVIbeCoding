@@ -7,7 +7,7 @@ import RecipeCarousel from '../components/RecipeCarousel';
 import RecipeSlideGroup from '../components/RecipeSlideGroup';
 import { Search, AlertCircle, Filter, X as CloseIcon, Leaf, Coffee, Carrot, Sparkles, Salad } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useUI } from '../context/UIContext';
 
 const FloatingElement = ({ children, delay = 0, x = 0, y = 0, rotate = 0 }: { children: React.ReactNode, delay?: number, x?: number, y?: number, rotate?: number }) => (
@@ -326,7 +326,7 @@ export default function Home() {
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-8 sticky top-0 md:relative z-20 py-2 md:py-0"
+          className="mb-8 sticky top-0 md:relative z-20 py-2 md:py-0 w-full"
         >
           <motion.div 
             style={{ 
@@ -335,15 +335,40 @@ export default function Home() {
             }}
             className="absolute inset-0 -mx-4 rounded-3xl md:hidden"
           />
-          <div className="relative flex items-center w-full">
-            <Search className="absolute left-4 text-gray-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Cari bahan makanan (Contoh: Jahe, Ayam, Brokoli...)" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-orange-100 focus:border-orange-200 outline-none text-sm transition-all duration-300"
-            />
+          <div className="relative flex flex-col md:flex-row items-center w-full gap-4">
+            <div className="relative flex items-center w-full flex-1">
+              <Search className="absolute left-4 text-gray-400" size={18} />
+              <input 
+                type="text" 
+                placeholder="Cari bahan makanan (Contoh: Jahe, Ayam, Brokoli...)" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-orange-100 focus:border-orange-200 outline-none text-sm transition-all duration-300"
+              />
+            </div>
+            
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full md:w-auto shrink-0 relative overflow-hidden rounded-2xl"
+            >
+              <motion.div
+                animate={{ backgroundPosition: ['0% 0%', '100% 100%'] }}
+                transition={{ duration: 3, repeat: Infinity, repeatType: "mirror" }}
+                className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-600 bg-[length:200%_200%] opacity-20"
+              />
+              <Link 
+                to="/shopping-list"
+                className="relative flex items-center justify-center gap-3 w-full md:w-auto px-6 py-3 bg-emerald-600/90 hover:bg-emerald-600 text-white border border-emerald-500/50 rounded-2xl shadow-lg shadow-emerald-200/50 transition-all font-bold group backdrop-blur-sm"
+              >
+                <div className="relative">
+                  <div className="absolute inset-0 bg-white/30 rounded-full blur-md group-hover:blur-lg transition-all" />
+                  <span className="text-xl relative z-10 block group-hover:-rotate-12 transition-transform">🛒</span>
+                </div>
+                <span className="tracking-wide">List Belanja Menu Sehat</span>
+                <Sparkles size={16} className="absolute top-1 right-2 text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+            </motion.div>
           </div>
         </motion.header>
 
