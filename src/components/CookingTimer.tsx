@@ -50,10 +50,10 @@ export default function CookingTimer() {
   const alarmIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const silentAudioRef = useRef<HTMLAudioElement | null>(null);
   const webPushTimerIdRef = useRef<string | null>(null);
+  const isPlayingAlarmRef = useRef(false);
 
-  const scheduleWebPush = async (delayMs: number) => {
+  const scheduleWebPush = async (delayMs: number, subscription: any) => {
     try {
-      const subscription = await getPushSubscription();
       if (subscription) {
         const timerId = Date.now().toString() + Math.random().toString(36);
         webPushTimerIdRef.current = timerId;
@@ -82,14 +82,14 @@ export default function CookingTimer() {
   };
 
   const cancelWebPush = async () => {
-    if (webPushTimerIdRef.current) {
+    const currentTimerId = webPushTimerIdRef.current;
+    if (currentTimerId) {
+      webPushTimerIdRef.current = null;
       await fetch('/api/cancel-push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ timerId: webPushTimerIdRef.current })
-      }).catch(() => {}).finally(() => {
-        webPushTimerIdRef.current = null;
-      });
+        body: JSON.stringify({ timerId: currentTimerId })
+      }).catch(() => {});
     }
   };
 
@@ -111,14 +111,18 @@ export default function CookingTimer() {
       setShowIOSWarning(true);
     }
 
-    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-
-      try {
-        await Notification.requestPermission();
-      } catch (e) {
-        console.error(e);
+    if ('Notification' in window) {
+      if (Notification.permission === 'granted') return true;
+      if (Notification.permission !== 'denied') {
+        try {
+          const permission = await Notification.requestPermission();
+          return permission === 'granted';
+        } catch (e) {
+          console.error(e);
+        }
       }
     }
+    return false;
   };
 
   const ensureAudioContext = async () => {
@@ -165,8 +169,11 @@ export default function CookingTimer() {
   };
 
   const playAlarm = async (options?: { skipNotification?: boolean }) => {
-    if (alarmIntervalRef.current) return;
+    if (isPlayingAlarmRef.current) return;
+    isPlayingAlarmRef.current = true;
     await ensureAudioContext();
+    if (!isPlayingAlarmRef.current || alarmIntervalRef.current) return;
+
     playSingleBeep();
     alarmIntervalRef.current = setInterval(() => {
       playSingleBeep();
@@ -182,7 +189,7 @@ export default function CookingTimer() {
               requireInteraction: true,
               vibrate: [200, 100, 200, 100, 200],
               tag: 'cooking-timer'
-            }).catch(e => {
+            } as any).catch(e => {
                // Fallback if ServiceWorker approach fails
                createFallbackNotification();
             });
@@ -203,7 +210,7 @@ export default function CookingTimer() {
         requireInteraction: true,
         vibrate: [200, 100, 200, 100, 200],
         tag: 'cooking-timer'
-      });
+      } as any);
       notification.onclick = () => {
         window.focus();
         stopAlarm();
@@ -217,6 +224,7 @@ export default function CookingTimer() {
   }
 
   const stopAlarm = () => {
+    isPlayingAlarmRef.current = false;
     if (alarmIntervalRef.current) {
       clearInterval(alarmIntervalRef.current);
       alarmIntervalRef.current = null;
@@ -228,9 +236,14 @@ export default function CookingTimer() {
       const { duration } = e.detail;
       if (duration) {
         silentAudioRef.current?.play().catch(() => {});
-        await ensureAudioContext();
+        // Initiate subscription eagerly so iOS does not drop user gesture
+        const subscriptionPromise = getPushSubscription().catch(() => null);
+        const permissionPromise = requestNotificationPermission();
         
-        requestNotificationPermission();
+        await ensureAudioContext();
+        await permissionPromise;
+        const subscription = await subscriptionPromise;
+        
         setMinutes(duration);
         setSeconds(0);
         setIsActive(true);
@@ -238,7 +251,7 @@ export default function CookingTimer() {
         setIsFinished(false);
         const durationMs = (duration * 60) * 1000;
         targetTimeRef.current = Date.now() + durationMs;
-        scheduleWebPush(durationMs);
+        if (subscription) scheduleWebPush(durationMs, subscription);
       }
     };
 
@@ -299,6 +312,7 @@ export default function CookingTimer() {
     
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      stopAlarm();
     };
   }, [isActive, minutes, seconds]);
 
@@ -314,15 +328,18 @@ export default function CookingTimer() {
         (window as any).backgroundSilentAudio.pause();
       }
     }
+
+    const subscriptionPromise = getPushSubscription().catch(() => null);
+    const permissionPromise = requestNotificationPermission();
     
-    // Request permission synchronously before any awaits!
-    requestNotificationPermission();
     await ensureAudioContext();
+    await permissionPromise;
+    const subscription = await subscriptionPromise;
     
     if (!isActive) {
       const remainingMs = (minutes * 60 + seconds) * 1000;
       targetTimeRef.current = Date.now() + remainingMs;
-      scheduleWebPush(remainingMs);
+      if (subscription) scheduleWebPush(remainingMs, subscription);
     } else {
       targetTimeRef.current = null;
       cancelWebPush();
@@ -363,7 +380,14 @@ export default function CookingTimer() {
     }
   };
 
-  const isRecipePage = location.pathname.startsWith('/recipe');
+  const isRecipePage = location.pathname.startsWith('/recipe') || location.pathname.startsWith('/custom-recipe');
+
+  useEffect(() => {
+    if (!isRecipePage) {
+      resetTimer();
+    }
+  }, [isRecipePage]);
+
   if (!isRecipePage) return null;
 
   return (
@@ -391,8 +415,11 @@ export default function CookingTimer() {
 
             <div className="flex items-center justify-between mb-4">
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Shotclock Memasak</span>
-              <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-600">
-                <RotateCcw size={14} onClick={(e) => { e.stopPropagation(); resetTimer(); }} />
+              <button 
+                onClick={(e) => { e.stopPropagation(); resetTimer(); }} 
+                className="text-gray-400 hover:text-gray-600 flex items-center justify-center w-6 h-6"
+              >
+                <RotateCcw size={14} />
               </button>
             </div>
 

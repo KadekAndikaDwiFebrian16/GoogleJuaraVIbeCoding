@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [coverImage, setCoverImage] = useState('');
+  const [imageCredit, setImageCredit] = useState('');
   const [mealTime, setMealTime] = useState<'pagi' | 'siang' | 'sore' | 'malam'>('pagi');
   const [condition, setCondition] = useState('');
   const [prepTime, setPrepTime] = useState('');
@@ -123,6 +124,7 @@ export default function AdminDashboard() {
         title,
         description,
         coverImage: coverImage || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1000&auto=format&fit=crop',
+        imageCredit: imageCredit || '',
         mealTime,
         condition,
         nutrition,
@@ -163,6 +165,7 @@ export default function AdminDashboard() {
     setTitle('');
     setDescription('');
     setCoverImage('');
+    setImageCredit('');
     setIngredients(['']);
     setInstructions([{ step: 1, text: '', image: '' }]);
     setCondition('');
@@ -180,6 +183,7 @@ export default function AdminDashboard() {
     setTitle(recipe.title);
     setDescription(recipe.description);
     setCoverImage(recipe.coverImage);
+    setImageCredit(recipe.imageCredit || '');
     setMealTime(recipe.mealTime as any);
     setCondition(recipe.condition || '');
     setIngredients(recipe.ingredients.length > 0 ? recipe.ingredients : ['']);
@@ -331,6 +335,14 @@ export default function AdminDashboard() {
                         <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 font-sans">Gambar Sampul</label>
                         <ImageUpload value={coverImage} onChange={setCoverImage} folder="recipes" />
                       </div>
+                      {coverImage && (
+                        <FormInput 
+                          label="Kredit Foto Sampul" 
+                          value={imageCredit} 
+                          onChange={setImageCredit} 
+                          placeholder="Contoh: unsplash.com / John Doe" 
+                        />
+                      )}
                       <div className="grid grid-cols-2 gap-4">
                         <FormInput label="Waktu Masak" value={prepTime} onChange={setPrepTime} placeholder="Contoh: 30 Mnt" />
                         <FormInput label="Porsi" value={servings} onChange={setServings} placeholder="Contoh: 2-4 Org" />
@@ -447,6 +459,19 @@ export default function AdminDashboard() {
                               folder="instructions"
                               compact
                             />
+                            
+                            {step.image && (
+                              <div className="pt-1">
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 mb-2">Kredit Foto Langkah</label>
+                                <input 
+                                  type="text"
+                                  value={step.imageCredit || ''}
+                                  onChange={(e) => handleInstructionChange(i, 'imageCredit', e.target.value)}
+                                  placeholder="Contoh: pexels.com"
+                                  className="w-full bg-white border border-gray-100 rounded-xl px-4 py-2.5 text-xs focus:ring-2 focus:ring-orange-100 outline-none transition-all placeholder:text-gray-300"
+                                />
+                              </div>
+                            )}
                             
                             <div className="pt-2">
                               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 mb-3">Timer (Menit)</label>

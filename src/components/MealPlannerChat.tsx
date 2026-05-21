@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, Calendar, Loader2, ShoppingBag } from 'lucide-react';
+import { X, Send, Calendar, Loader2, ShoppingBag, Save } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useNavigate } from 'react-router-dom';
-import { askAssistant } from '../services/aiService';
+import { askAssistant, extractRecipe } from '../services/aiService';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../lib/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
 
 interface Message {
   role: 'ai' | 'user';
@@ -20,6 +20,7 @@ export default function MealPlannerChat({ isOpen, onToggle }: { isOpen: boolean,
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [savingRecipe, setSavingRecipe] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -88,6 +89,35 @@ export default function MealPlannerChat({ isOpen, onToggle }: { isOpen: boolean,
     }
   };
 
+  const handleSaveToCustomRecipe = async (text: string) => {
+    if (!user || savingRecipe) return;
+    setSavingRecipe(true);
+    try {
+      const extracted = await extractRecipe(text, 'meal_planner');
+      if (extracted && extracted.title && extracted.instructions) {
+        const newId = doc(collection(db, 'customRecipes')).id;
+        await setDoc(doc(db, 'customRecipes', newId), {
+          id: newId,
+          userId: user.uid,
+          title: extracted.title,
+          source: 'meal_planner',
+          instructions: extracted.instructions,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+        navigate(`/custom-recipe/${newId}`);
+        onToggle(); // Close chat
+      } else {
+        alert("Gagal mengekstrak resep dari teks ini.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan saat menyimpan resep.");
+    } finally {
+      setSavingRecipe(false);
+    }
+  };
+
   const renderMessageContent = (msg: Message) => {
     const isAI = msg.role === 'ai';
     let shoppingItems: string[] = [];
@@ -140,13 +170,21 @@ export default function MealPlannerChat({ isOpen, onToggle }: { isOpen: boolean,
         </div>
         
         {shoppingItems.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-emerald-100 flex justify-end">
+          <div className="mt-4 pt-3 border-t border-emerald-100 flex flex-col gap-2 justify-end">
             <button
               onClick={() => handleSaveShoppingList(shoppingItems)}
-              className="flex items-center gap-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-4 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm"
+              className="flex items-center justify-center gap-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-4 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm w-full"
             >
               <ShoppingBag size={16} />
               Simpan Bahan Makanan Untuk Dibeli
+            </button>
+            <button
+              onClick={() => handleSaveToCustomRecipe(msg.text)}
+              disabled={savingRecipe}
+              className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm w-full disabled:opacity-50"
+            >
+              {savingRecipe ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+              Simpan Sebagai Resep Custom
             </button>
           </div>
         )}

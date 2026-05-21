@@ -16,3 +16,22 @@ export async function askAssistant(question: string, mode: 'chat' | 'sulap' | 'm
     throw error;
   }
 }
+
+export async function extractRecipe(text: string, source: string) {
+  try {
+    const res = await fetch('/api/extract-recipe', {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, source }),
+    });
+    
+    const data = await res.json();
+    if (!res.ok) {
+        throw new Error(data.error || "Failed to extract recipe");
+    }
+    return data.result;
+  } catch (error) {
+    console.error("Extract recipe error:", error);
+    throw error;
+  }
+}

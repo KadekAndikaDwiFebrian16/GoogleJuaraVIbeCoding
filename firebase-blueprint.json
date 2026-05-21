@@ -23,6 +23,7 @@
         "title": { "type": "string" },
         "description": { "type": "string" },
         "coverImage": { "type": "string" },
+        "imageCredit": { "type": "string", "description": "Attribution/credit for the cover image" },
         "mealTime": { "type": "string", "enum": ["pagi", "siang", "sore", "malam"] },
         "condition": { "type": "string", "description": "e.g. maag, diabetes, etc." },
         "nutrition": {
@@ -45,7 +46,8 @@
             "properties": {
               "step": { "type": "number" },
               "text": { "type": "string" },
-              "image": { "type": "string" }
+              "image": { "type": "string" },
+              "imageCredit": { "type": "string", "description": "Attribution/credit for the step image" }
             }
           }
         },
@@ -96,6 +98,31 @@
         "items": { "type": "array" }
       }
     },
+    "CustomRecipe": {
+      "title": "Custom Recipe",
+      "description": "User's personal saved custom recipes",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "source": { "type": "string", "enum": ["chef_ai", "meal_planner", "magic_ingredients", "manual"] },
+        "instructions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "step": { "type": "number" },
+              "text": { "type": "string" },
+              "duration": { "type": "number", "description": "Optional timer in minutes" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "instructions"]
+    },
     "AdminAccount": {
       "title": "Admin",
       "description": "Admin accounts records",
@@ -125,6 +152,10 @@
     "shoppingLists": {
       "schema": "ShoppingList",
       "description": "User's individual shopping list"
+    },
+    "customRecipes": {
+      "schema": "CustomRecipe",
+      "description": "User's individual custom recipes"
     },
     "admins": {
         "schema": "AdminAccount",

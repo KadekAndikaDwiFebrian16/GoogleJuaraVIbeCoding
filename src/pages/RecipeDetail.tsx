@@ -145,6 +145,12 @@ export default function RecipeDetail() {
         />
         <div className="absolute inset-0 bg-black/30" />
         
+        {recipe.imageCredit && (
+          <div className="absolute bottom-28 right-6 bg-black/45 backdrop-blur-sm text-white text-[10px] font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full border border-white/10 select-none z-10 font-sans shadow-sm">
+            📸 foto: {recipe.imageCredit}
+          </div>
+        )}
+        
         <Link 
           to="/" 
           className="absolute top-6 left-6 w-10 h-10 bg-white md:bg-white/90 md:backdrop-blur-md rounded-full flex items-center justify-center text-gray-900 shadow-sm hover:bg-white transition-all z-10"
@@ -301,12 +307,17 @@ export default function RecipeDetail() {
                         </div>
                         
                         {step.image && (
-                          <div className="order-1 lg:order-2 w-full aspect-video lg:aspect-[4/3] rounded-3xl overflow-hidden border-4 border-white shadow-lg shadow-orange-100/50">
+                          <div className="order-1 lg:order-2 w-full aspect-video lg:aspect-[4/3] rounded-3xl overflow-hidden border-4 border-white shadow-lg shadow-orange-100/50 relative group">
                             <img 
                               src={step.image} 
                               alt={`Langkah ${step.step}`} 
                               className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" 
                             />
+                            {step.imageCredit && (
+                              <div className="absolute bottom-3 right-3 bg-black/45 backdrop-blur-sm text-white text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border border-white/10 select-none font-sans z-10 transition-opacity duration-300">
+                                📸 {step.imageCredit}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

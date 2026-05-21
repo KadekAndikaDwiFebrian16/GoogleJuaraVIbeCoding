@@ -369,6 +369,23 @@ export default function Home() {
                 <Sparkles size={16} className="absolute top-1 right-2 text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
             </motion.div>
+
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full md:w-auto shrink-0 relative overflow-hidden rounded-2xl"
+            >
+              <Link 
+                to="/custom-recipes"
+                className="relative flex items-center justify-center gap-3 w-full md:w-auto px-6 py-3 bg-indigo-600/90 hover:bg-indigo-600 text-white border border-indigo-500/50 rounded-2xl shadow-lg shadow-indigo-200/50 transition-all font-bold group backdrop-blur-sm"
+              >
+                <div className="relative">
+                  <div className="absolute inset-0 bg-white/30 rounded-full blur-md group-hover:blur-lg transition-all" />
+                  <span className="text-xl relative z-10 block group-hover:scale-110 transition-transform">📝</span>
+                </div>
+                <span className="tracking-wide">Resep Custom</span>
+              </Link>
+            </motion.div>
           </div>
         </motion.header>
 

@@ -18,6 +18,7 @@ export interface InstructionStep {
   step: number;
   text: string;
   image?: string;
+  imageCredit?: string; // photo credit/attribution text
   duration?: number; // in minutes
 }
 
@@ -26,6 +27,7 @@ export interface Recipe {
   title: string;
   description: string;
   coverImage: string;
+  imageCredit?: string; // photo credit/attribution text for cover
   mealTime: 'pagi' | 'siang' | 'sore' | 'malam';
   condition: string;
   nutrition: Nutrition;
@@ -48,6 +50,22 @@ export interface Comment {
   text: string;
   rating: number;
   createdAt: string;
+}
+
+export interface CustomRecipeInstruction {
+  step: number;
+  text: string;
+  duration?: number;
+}
+
+export interface CustomRecipe {
+  id: string;
+  userId: string;
+  title: string;
+  source: 'chef_ai' | 'meal_planner' | 'magic_ingredients' | 'manual';
+  instructions: CustomRecipeInstruction[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Suggestion {

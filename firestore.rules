@@ -90,6 +90,12 @@ service cloud.firestore {
       allow delete: if isAdmin() && isValidId(suggestionId);
     }
     
+    // --- Collection: CustomRecipes ---
+    match /customRecipes/{recipeId} {
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+    
     // --- Collection: ShoppingLists ---
     match /shoppingLists/{userId} {
       allow read, write: if isOwner(userId);

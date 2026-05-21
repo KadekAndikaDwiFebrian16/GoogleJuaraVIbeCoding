@@ -16,6 +16,8 @@ import Loader from './components/Loader';
 import CookingTimer from './components/CookingTimer';
 
 import ShoppingList from './pages/ShoppingList';
+import CustomRecipes from './pages/CustomRecipes';
+import CustomRecipeDetail from './pages/CustomRecipeDetail';
 
 const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) => {
   const { user, loading, isAdmin } = useAuth();
@@ -52,6 +54,20 @@ function AnimatedRoutes() {
           <ProtectedRoute>
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
               <ShoppingList />
+            </motion.div>
+          </ProtectedRoute>
+        } />
+        <Route path="/custom-recipes" element={
+          <ProtectedRoute>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+              <CustomRecipes />
+            </motion.div>
+          </ProtectedRoute>
+        } />
+        <Route path="/custom-recipe/:id" element={
+          <ProtectedRoute>
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+              <CustomRecipeDetail />
             </motion.div>
           </ProtectedRoute>
         } />

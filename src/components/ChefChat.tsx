@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, Salad, Loader2 } from 'lucide-react';
+import { X, Send, Salad, Loader2, Save } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { askAssistant } from '../services/aiService';
+import { askAssistant, extractRecipe } from '../services/aiService';
+import { useAuth } from '../context/AuthContext';
+import { db } from '../lib/firebase';
+import { collection, doc, setDoc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   role: 'ai' | 'user';
@@ -15,7 +19,10 @@ export default function ChefChat({ isOpen, onToggle }: { isOpen: boolean, onTogg
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [savingRecipe, setSavingRecipe] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -41,6 +48,35 @@ export default function ChefChat({ isOpen, onToggle }: { isOpen: boolean, onTogg
       setMessages(prev => [...prev, { role: 'ai', text: 'Maaf, saya sedang mengalami kendala teknis. Coba lagi nanti ya!' }]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveToCustomRecipe = async (text: string) => {
+    if (!user || savingRecipe) return;
+    setSavingRecipe(true);
+    try {
+      const extracted = await extractRecipe(text, 'chef_ai');
+      if (extracted && extracted.title && extracted.instructions) {
+        const newId = doc(collection(db, 'customRecipes')).id;
+        await setDoc(doc(db, 'customRecipes', newId), {
+          id: newId,
+          userId: user.uid,
+          title: extracted.title,
+          source: 'chef_ai',
+          instructions: extracted.instructions,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+        navigate(`/custom-recipe/${newId}`);
+        onToggle(); // Close chat
+      } else {
+        alert("Gagal mengekstrak resep dari teks ini.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan saat menyimpan resep.");
+    } finally {
+      setSavingRecipe(false);
     }
   };
 
@@ -87,6 +123,16 @@ export default function ChefChat({ isOpen, onToggle }: { isOpen: boolean, onTogg
                   }`}>
                     <ReactMarkdown>{msg.text}</ReactMarkdown>
                   </div>
+                  {msg.role === 'ai' && (
+                    <button
+                      onClick={() => handleSaveToCustomRecipe(msg.text)}
+                      disabled={savingRecipe}
+                      className="mt-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg transition-colors border border-orange-200/50"
+                    >
+                      {savingRecipe ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+                      Simpan Resep
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

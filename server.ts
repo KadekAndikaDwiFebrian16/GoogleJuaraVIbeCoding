@@ -5,8 +5,23 @@ import { GoogleGenAI } from "@google/genai";
 import webPush from "web-push";
 import "dotenv/config";
 
-// Generate VAPID keys for Web Push once per server start
-const vapidKeys = webPush.generateVAPIDKeys();
+import fs from "fs";
+
+// Generate or load VAPID keys for Web Push
+let vapidKeys: { publicKey: string; privateKey: string };
+const VAPID_KEYS_PATH = path.join(process.cwd(), 'vapid-keys.json');
+
+try {
+  if (fs.existsSync(VAPID_KEYS_PATH)) {
+    vapidKeys = JSON.parse(fs.readFileSync(VAPID_KEYS_PATH, 'utf-8'));
+  } else {
+    vapidKeys = webPush.generateVAPIDKeys();
+    fs.writeFileSync(VAPID_KEYS_PATH, JSON.stringify(vapidKeys));
+  }
+} catch (e) {
+  vapidKeys = webPush.generateVAPIDKeys();
+}
+
 webPush.setVapidDetails(
   'mailto:febriandwiiiii@gmail.com',
   vapidKeys.publicKey,
@@ -25,7 +40,55 @@ async function startServer() {
   });
 
   // Web Push API Routes
-  const scheduledPushes: Record<string, NodeJS.Timeout> = {};
+  const SCHEDULED_PUSHES_FILE = path.join(process.cwd(), 'scheduled-pushes.json');
+  
+  interface PushTask {
+    subscription: any;
+    payload: any;
+    targetTime: number;
+  }
+  
+  let scheduledTasks: Record<string, PushTask> = {};
+  const scheduledTimeouts: Record<string, NodeJS.Timeout> = {};
+
+  const saveScheduledTasks = () => {
+    try {
+      fs.writeFileSync(SCHEDULED_PUSHES_FILE, JSON.stringify(scheduledTasks));
+    } catch (e) {
+      console.error("Error saving scheduled pushes", e);
+    }
+  };
+
+  const loadScheduledTasks = () => {
+    try {
+      if (fs.existsSync(SCHEDULED_PUSHES_FILE)) {
+        scheduledTasks = JSON.parse(fs.readFileSync(SCHEDULED_PUSHES_FILE, 'utf-8'));
+        const now = Date.now();
+        
+        Object.entries(scheduledTasks).forEach(([timerId, task]) => {
+          const delay = task.targetTime - now;
+          if (delay <= 0) {
+            // Already past due, send now
+            webPush.sendNotification(task.subscription, JSON.stringify(task.payload)).catch(() => {});
+            delete scheduledTasks[timerId];
+          } else {
+            // Schedule it
+            scheduledTimeouts[timerId] = setTimeout(() => {
+              webPush.sendNotification(task.subscription, JSON.stringify(task.payload)).catch(() => {});
+              delete scheduledTasks[timerId];
+              delete scheduledTimeouts[timerId];
+              saveScheduledTasks();
+            }, delay);
+          }
+        });
+        saveScheduledTasks();
+      }
+    } catch (e) {
+      console.error("Error loading scheduled pushes", e);
+    }
+  };
+
+  loadScheduledTasks();
 
   app.get("/api/vapidPublicKey", (_req, res) => {
     res.json({ publicKey: vapidKeys.publicKey });
@@ -39,15 +102,21 @@ async function startServer() {
        return;
     }
 
-    if (scheduledPushes[timerId]) {
-      clearTimeout(scheduledPushes[timerId]);
+    if (scheduledTimeouts[timerId]) {
+      clearTimeout(scheduledTimeouts[timerId]);
     }
 
+    const targetTime = Date.now() + delayMs;
+    scheduledTasks[timerId] = { subscription, payload, targetTime };
+    saveScheduledTasks();
+
     // Schedule the push notification
-    scheduledPushes[timerId] = setTimeout(() => {
+    scheduledTimeouts[timerId] = setTimeout(() => {
       webPush.sendNotification(subscription, JSON.stringify(payload))
         .catch(err => console.error("Error sending push notification:", err));
-      delete scheduledPushes[timerId];
+      delete scheduledTasks[timerId];
+      delete scheduledTimeouts[timerId];
+      saveScheduledTasks();
     }, delayMs);
 
     res.json({ status: "scheduled", delayMs, timerId });
@@ -55,9 +124,11 @@ async function startServer() {
 
   app.post("/api/cancel-push", (req, res) => {
     const { timerId } = req.body;
-    if (timerId && scheduledPushes[timerId]) {
-      clearTimeout(scheduledPushes[timerId]);
-      delete scheduledPushes[timerId];
+    if (timerId && scheduledTimeouts[timerId]) {
+      clearTimeout(scheduledTimeouts[timerId]);
+      delete scheduledTimeouts[timerId];
+      delete scheduledTasks[timerId];
+      saveScheduledTasks();
     }
     res.json({ status: "cancelled" });
   });
@@ -230,6 +301,38 @@ Jangan pernah memberikan informasi yang membahayakan kesehatan. Berikan takaran 
         ui_message: userFriendlyMessage,
         error: errorMessage
       });
+    }
+  });
+
+  app.post("/api/extract-recipe", async (req, res) => {
+    try {
+      const { text, source } = req.body;
+      const ai = getGenAI();
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-lite",
+        contents: `Ekstrak resep dari teks berikut. Berikan format JSON dengan skema:
+{
+  "title": "Judul Resep",
+  "instructions": [
+    { "step": 1, "text": "Langkah pertama", "duration": 0 }, // duration in minutes if mentioned, else 0
+    { "step": 2, "text": "Langkah kedua", "duration": 15 } 
+  ]
+}
+Hanya kembalikan JSON murni. Abaikan bahan-bahan, hanya ambil langkah-langkah pembuatannya.
+
+Teks:
+${text}`,
+      });
+      const resultText = response.text || "";
+      const jsonStrMatch = resultText.match(/\{[\s\S]*\}/);
+      if (jsonStrMatch) {
+         res.json({ result: JSON.parse(jsonStrMatch[0]) });
+      } else {
+         res.status(400).json({ error: "Failed to extract recipe" });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal error" });
     }
   });
 
