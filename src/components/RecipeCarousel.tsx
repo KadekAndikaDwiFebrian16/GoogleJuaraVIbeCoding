@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Recipe } from '../types';
 import { Link } from 'react-router-dom';
+import { ChefHat } from 'lucide-react';
 
 interface RecipeCarouselProps {
   recipes: Recipe[];
@@ -34,10 +35,37 @@ export default function RecipeCarousel({ recipes, timeLabel = "Hari" }: RecipeCa
           transition={{ duration: 0.6, ease: "easeInOut" }}
           className="absolute inset-0"
         >
-          <div 
-            className="absolute inset-0 bg-cover bg-center transform transition-transform duration-[10s] md:group-hover:scale-105"
-            style={{ backgroundImage: `url(${displayRecipes[currentIndex].coverImage})` }}
-          />
+          {(() => {
+            const currentRecipe = displayRecipes[currentIndex];
+            const isNoImage = !currentRecipe.coverImage || currentRecipe.coverImage === '' || currentRecipe.coverImage.includes('unsplash.com/photo-1546069901-ba9599a7e63c');
+            
+            if (isNoImage) {
+              return (
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-slate-800 to-[#4E4E3A] flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:28px_28px] pointer-events-none opacity-40 animate-pulse" />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="flex flex-col items-center gap-2 max-w-md z-1"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-orange-600/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-2 shadow-inner">
+                      <ChefHat size={28} className="stroke-[1.8]" />
+                    </div>
+                    <span className="text-[10px] md:text-xs text-orange-400 font-bold uppercase tracking-[0.25em]">No Cover Image</span>
+                    <p className="text-gray-400 text-xs tracking-wide">Tetap penuh esensi rasa & kreasi yang menggugah selera!</p>
+                  </motion.div>
+                </div>
+              );
+            }
+            
+            return (
+              <div 
+                className="absolute inset-0 bg-cover bg-center transform transition-transform duration-[10s] md:group-hover:scale-105"
+                style={{ backgroundImage: `url(${currentRecipe.coverImage})` }}
+              />
+            );
+          })()}
           {/* Enhanced gradient for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent md:to-black/10" />
           

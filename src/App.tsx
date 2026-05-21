@@ -100,7 +100,7 @@ function AnimatedRoutes() {
 
 function AppContent() {
   const { user } = useAuth();
-  const { activeComponent, setActiveComponent } = useUI();
+  const { activeComponent, setActiveComponent, toast, hideToast } = useUI();
   const [assistantType, setAssistantType] = React.useState<'chef' | 'sulap' | 'meal-planner' | null>(null);
 
   // Sync assistantType with activeComponent
@@ -110,9 +110,75 @@ function AppContent() {
     }
   }, [activeComponent]);
 
+  React.useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => {
+        hideToast();
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast.show, toast.message, hideToast]);
+
   return (
     <Router>
       <div className="min-h-screen bg-[#FAFAF8] text-[#2D2D2D] font-sans selection:bg-orange-600 selection:text-white relative overflow-x-hidden">
+        {/* Global Floating Toast */}
+        <div className="fixed top-4 md:top-6 left-0 right-0 z-[100000] flex justify-center pointer-events-none px-4">
+          <AnimatePresence>
+            {toast.show && (
+              <motion.div
+                initial={{ opacity: 0, y: -40, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 450, damping: 28 }}
+                className="pointer-events-auto flex items-center gap-3.5 px-5 py-3.5 rounded-2xl shadow-[0_20px_50px_rgba(251,146,60,0.18),0_1px_4px_rgba(0,0,0,0.05)] border backdrop-blur-lg max-w-[95vw] w-[380px]"
+                style={{
+                  backgroundColor: toast.type === 'success' ? 'rgba(255, 255, 255, 0.99)' : toast.type === 'error' ? 'rgba(254, 242, 242, 0.99)' : 'rgba(255, 255, 255, 0.99)',
+                  borderColor: toast.type === 'success' ? '#FED7AA' : toast.type === 'error' ? '#FECACA' : '#E5E7EB',
+                }}
+              >
+                <div className="flex-shrink-0">
+                  {toast.type === 'success' ? (
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-orange-500/15">
+                      <motion.span
+                        animate={{ scale: [1, 1.15, 1, 1.15, 1], rotate: [0, 8, -8, 8, 0] }}
+                        transition={{ repeat: Infinity, duration: 2.5, repeatDelay: 1.5 }}
+                        className="text-sm"
+                      >
+                        ✨
+                      </motion.span>
+                    </div>
+                  ) : toast.type === 'error' ? (
+                    <div className="w-9 h-9 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs">
+                      ✕
+                    </div>
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs">
+                      ℹ
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.15em] text-orange-600/80 mb-0.5 font-sans">
+                    {toast.type === 'success' ? 'Berhasil Terkirim' : toast.type === 'error' ? 'Kesalahan' : 'Pemberitahuan'}
+                  </h4>
+                  <p className="text-xs font-bold text-gray-800 leading-snug">
+                    {toast.message}
+                  </p>
+                </div>
+
+                <button
+                  onClick={hideToast}
+                  className="text-gray-400 hover:text-gray-700 p-1 rounded-xl transition-colors hover:bg-gray-100/50 focus:outline-none"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         {/* Ambient Background Elements - Disabled on mobile for performance */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden hidden md:block">
           <motion.div 

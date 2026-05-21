@@ -16,20 +16,35 @@ function urlB64ToUint8Array(base64String: string) {
 }
 
 const getPushSubscription = async () => {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
-  const registration = await navigator.serviceWorker.ready;
-  let subscription = await registration.pushManager.getSubscription();
-  if (!subscription) {
-    const response = await fetch('/api/vapidPublicKey').catch(() => null);
-    if (!response) return null;
-    const vapidPublicKey = (await response.json()).publicKey;
-    const convertedVapidKey = urlB64ToUint8Array(vapidPublicKey);
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: convertedVapidKey
-    });
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.warn('PushManager or serviceWorker not supported on this browser/OS.');
+    return null;
   }
-  return subscription;
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      const response = await fetch('/api/vapidPublicKey').catch(() => null);
+      if (!response) {
+        console.warn('Could not fetch public key.');
+        return null;
+      }
+      const data = await response.json().catch(() => null);
+      if (!data || !data.publicKey) {
+        console.warn('Invalid public key data.');
+        return null;
+      }
+      const convertedVapidKey = urlB64ToUint8Array(data.publicKey);
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertedVapidKey
+      });
+    }
+    return subscription;
+  } catch (err) {
+    console.error('getPushSubscription error:', err);
+    return null;
+  }
 };
 
 export default function CookingTimer() {
@@ -236,13 +251,13 @@ export default function CookingTimer() {
       const { duration } = e.detail;
       if (duration) {
         silentAudioRef.current?.play().catch(() => {});
-        // Initiate subscription eagerly so iOS does not drop user gesture
-        const subscriptionPromise = getPushSubscription().catch(() => null);
-        const permissionPromise = requestNotificationPermission();
         
+        // Ask for permission in the active user action sequence
+        const permissionGranted = await requestNotificationPermission();
         await ensureAudioContext();
-        await permissionPromise;
-        const subscription = await subscriptionPromise;
+        
+        // Subscribe to push notifications safely
+        const subscription = permissionGranted ? await getPushSubscription().catch(() => null) : null;
         
         setMinutes(duration);
         setSeconds(0);
@@ -329,12 +344,12 @@ export default function CookingTimer() {
       }
     }
 
-    const subscriptionPromise = getPushSubscription().catch(() => null);
-    const permissionPromise = requestNotificationPermission();
-    
+    // Ask for permission in the active user action sequence
+    const permissionGranted = await requestNotificationPermission();
     await ensureAudioContext();
-    await permissionPromise;
-    const subscription = await subscriptionPromise;
+    
+    // Subscribe to push notifications safely
+    const subscription = permissionGranted ? await getPushSubscription().catch(() => null) : null;
     
     if (!isActive) {
       const remainingMs = (minutes * 60 + seconds) * 1000;

@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Recipe } from '../types';
 import { motion, useMotionValue, useSpring, useTransform } from 'motion/react';
+import { ChefHat } from 'lucide-react';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -9,6 +10,7 @@ interface RecipeCardProps {
 
 export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  const isNoImage = !recipe.coverImage || recipe.coverImage === '' || recipe.coverImage.includes('unsplash.com/photo-1546069901-ba9599a7e63c');
   
   // Motion values for the "moving if mouse near" effect
   const x = useMotionValue(0);
@@ -69,25 +71,45 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
 
           {/* Image Container */}
           <div className="h-32 md:h-52 w-full bg-gray-50 relative overflow-hidden shrink-0">
-            <motion.img 
-              src={recipe.coverImage} 
-              alt={recipe.title}
-              loading="lazy"
-              style={{ x: imgX, y: imgY, scale: 1.15 }}
-              className="w-full h-full object-cover transition-transform duration-700 ease-out will-change-transform group-hover:scale-120"
-              referrerPolicy="no-referrer"
-            />
+            {isNoImage ? (
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-100/45 to-orange-200/20 flex flex-col items-center justify-center p-4">
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  whileInView={{ scale: 1, opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="flex flex-col items-center gap-1.5 text-center"
+                >
+                  <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-orange-500 border border-orange-100/80 group-hover:scale-110 group-hover:text-orange-600 transition-all duration-300">
+                    <ChefHat size={18} className="stroke-[1.8]" />
+                  </div>
+                  <span className="text-[9px] md:text-xs font-serif font-black text-orange-950 tracking-[0.15em] uppercase">No Picture Yet</span>
+                  <p className="text-[7px] md:text-[9px] text-orange-700/80 font-sans tracking-tight max-w-[130px] line-clamp-1 leading-none">Kelezatan rahasia sedang menanti!</p>
+                </motion.div>
+              </div>
+            ) : (
+              <motion.img 
+                src={recipe.coverImage} 
+                alt={recipe.title}
+                loading="lazy"
+                style={{ x: imgX, y: imgY, scale: 1.15 }}
+                className="w-full h-full object-cover transition-transform duration-700 ease-out will-change-transform group-hover:scale-120"
+                referrerPolicy="no-referrer"
+              />
+            )}
             
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
             
             {/* Shine Overlay */}
-            <div className="absolute inset-0 opacity-0 md:group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none">
-              <motion.div 
-                animate={{ x: ['-200%', '200%'] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3, ease: "linear" }}
-                className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg]"
-              />
-            </div>
+            {!isNoImage && (
+              <div className="absolute inset-0 opacity-0 md:group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none">
+                <motion.div 
+                  animate={{ x: ['-200%', '200%'] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3, ease: "linear" }}
+                  className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg]"
+                />
+              </div>
+            )}
             
             {/* Badges */}
             <div className="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col gap-1 md:gap-1.5">

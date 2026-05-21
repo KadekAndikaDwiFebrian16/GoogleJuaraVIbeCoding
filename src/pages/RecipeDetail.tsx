@@ -8,18 +8,20 @@ import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronLeft, ChevronRight, Clock, Users, Star, Salad, 
-  MessageCircle, Info, Timer, Trash2
+  MessageCircle, Info, Timer, Trash2, ChefHat
 } from 'lucide-react';
 import CookingTimer from '../components/CookingTimer';
 import { useAuth } from '../context/AuthContext';
+import { useUI } from '../context/UIContext';
 import { formatDate } from '../lib/utils';
 
 export default function RecipeDetail() {
   const { id } = useParams<{ id: string }>();
   const { profile } = useAuth();
+  const { showToast } = useUI();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,11 +59,11 @@ export default function RecipeDetail() {
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) {
-      alert('Silakan login terlebih dahulu untuk memberikan ulasan.');
+      showToast('Silakan login terlebih dahulu untuk memberikan ulasan.', 'info');
       return;
     }
     if (!commentText.trim()) {
-      alert('Komentar tidak boleh kosong.');
+      showToast('Komentar tidak boleh kosong.', 'info');
       return;
     }
 
@@ -99,10 +101,10 @@ export default function RecipeDetail() {
       setCommentText('');
       setRating(5);
       fetchRecipeData();
-      alert('Ulasan Anda berhasil dikirim!');
+      showToast('Ulasan Anda berhasil dikirim! ✨', 'success');
     } catch (error) {
       console.error(error);
-      alert('Gagal mengirim ulasan. Pastikan Anda sudah login.');
+      showToast('Gagal mengirim ulasan. Silakan coba kembali.', 'error');
       handleFirestoreError(error, OperationType.CREATE, `recipes/${id}/comments`);
     } finally {
       setSubmitting(false);
@@ -131,21 +133,41 @@ export default function RecipeDetail() {
   
   if (!recipe) return <div className="text-center py-20">Resep tidak ditemukan.</div>;
 
+  const isNoImage = !recipe.coverImage || recipe.coverImage === '' || recipe.coverImage.includes('unsplash.com/photo-1546069901-ba9599a7e63c');
+
   return (
     <div className="bg-[#FAFAF8] min-h-screen pb-20 relative">
       {/* Hero Section */}
       <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
-        <motion.img 
-          initial={{ scale: 1.1 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.5 }}
-          src={recipe.coverImage} 
-          className="w-full h-full object-cover"
-          referrerPolicy="no-referrer"
-        />
-        <div className="absolute inset-0 bg-black/30" />
+        {isNoImage ? (
+          <div className="w-full h-full bg-gradient-to-br from-[#FAFAF8] via-[#E8E8D5] to-[#D9D9C3] flex flex-col items-center justify-center p-6 relative">
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-40" />
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1 }}
+              className="flex flex-col items-center gap-3 text-center max-w-sm relative z-10"
+            >
+              <div className="w-16 h-16 rounded-full bg-white/90 shadow-md flex items-center justify-center text-orange-600 border border-orange-105">
+                <ChefHat size={32} className="stroke-[1.5]" />
+              </div>
+              <h3 className="font-serif font-bold text-gray-800 text-lg tracking-wider uppercase">No Cover Picture</h3>
+              <p className="text-xs text-gray-500 leading-relaxed max-w-xs font-sans tracking-tight">Setiap suapan kaya akan cerita. Coba kreasikan langkah-langkah di bawah untuk menghidupkan hidangan ini!</p>
+            </motion.div>
+          </div>
+        ) : (
+          <motion.img 
+            initial={{ scale: 1.1 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 1.5 }}
+            src={recipe.coverImage} 
+            className="w-full h-full object-cover"
+            referrerPolicy="no-referrer"
+          />
+        )}
+        <div className="absolute inset-0 bg-black/10 mix-blend-multiply pointer-events-none" />
         
-        {recipe.imageCredit && (
+        {!isNoImage && recipe.imageCredit && (
           <div className="absolute bottom-28 right-6 bg-black/45 backdrop-blur-sm text-white text-[10px] font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full border border-white/10 select-none z-10 font-sans shadow-sm">
             📸 foto: {recipe.imageCredit}
           </div>

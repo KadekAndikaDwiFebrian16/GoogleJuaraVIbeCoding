@@ -123,7 +123,7 @@ export default function AdminDashboard() {
       const recipeData = {
         title,
         description,
-        coverImage: coverImage || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1000&auto=format&fit=crop',
+        coverImage: coverImage || '',
         imageCredit: imageCredit || '',
         mealTime,
         condition,
