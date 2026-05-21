@@ -229,11 +229,12 @@ export default function RecipeDetail() {
                   {recipe.ingredients.map((ing, i) => (
                     <motion.li 
                       key={i} 
-                      whileHover={{ x: 5 }}
+                      whileHover={{ x: 6 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
                       className="flex items-start gap-3 group cursor-default"
                     >
-                      <div className="w-1.5 h-1.5 rounded-full bg-orange-600 mt-1.5" />
-                      <span className="text-gray-600 text-sm leading-relaxed group-hover:text-gray-900 transition-colors uppercase font-bold tracking-tighter">{ing}</span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-orange-600 mt-1.5 shrink-0 transition-transform duration-200 group-hover:scale-130" />
+                      <span className="text-gray-600 text-sm leading-relaxed group-hover:text-gray-900 transition-colors duration-200 uppercase font-bold tracking-tighter">{ing}</span>
                     </motion.li>
                   ))}
                 </ul>
@@ -460,12 +461,13 @@ export default function RecipeDetail() {
 function NutritionRow({ label, value, unit, color }: { label: string, value: string, unit: string, color: string }) {
     return (
         <motion.div 
-            whileHover={{ x: 5 }}
-            className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 group hover:border-orange-200 transition-colors cursor-default shadow-sm hover:shadow-md"
+            whileHover={{ x: 6 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 group hover:border-orange-200 transition-all duration-200 cursor-default shadow-sm hover:shadow-md"
         >
             <div className="flex items-center gap-3">
-               <div className={`w-2 h-2 rounded-full ${color}`} />
-               <span className="text-xs font-bold text-gray-500 uppercase tracking-tighter">{label}</span>
+               <div className={`w-2 h-2 rounded-full ${color} shrink-0 transition-transform duration-200 group-hover:scale-130`} />
+               <span className="text-xs font-bold text-gray-500 uppercase tracking-tighter transition-colors duration-200 group-hover:text-gray-900">{label}</span>
             </div>
             <div className="flex items-baseline gap-0.5">
                 <span className="text-sm font-bold text-gray-900">{value}</span>

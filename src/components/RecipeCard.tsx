@@ -45,7 +45,8 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
-      whileHover={window.innerWidth >= 1024 ? { y: -8, transition: { duration: 0.3, ease: [0.23, 1, 0.32, 1] } } : {}}
+      whileHover={{ y: -8, scale: 1.02 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
       whileTap={{ scale: 0.98 }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -56,24 +57,24 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
         // @ts-ignore
         "--mouse-y": useTransform(y, (val) => `${(val + 0.5) * 100}%`),
       }}
-      className="group relative h-full rounded-[1.5rem] md:rounded-[2.5rem] will-change-transform"
+      className="group relative h-full rounded-2xl md:rounded-[2rem] will-change-transform"
     >
-      <Link to={`/recipe/${recipe.id}`} className="block h-full rounded-[1.5rem] md:rounded-[2.5rem] isolate">
+      <Link to={`/recipe/${recipe.id}`} className="block h-full rounded-2xl md:rounded-[2rem] isolate">
         <motion.div 
           style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
-          className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border border-gray-100/80 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.06)] hover:border-orange-200/50 h-full flex flex-col will-change-transform isolate relative"
+          className="bg-white rounded-2xl md:rounded-[2rem] overflow-hidden border border-gray-100/60 hover:shadow-[0_22px_44px_rgba(251,146,60,0.08)] hover:border-orange-250 transition-all duration-300 h-full flex flex-col will-change-transform isolate relative"
         >
           {/* Dynamic Glow Effect - Desktop Only */}
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),rgba(251,146,60,0.08)_0%,transparent_70%)] pointer-events-none hidden lg:block" />
 
           {/* Image Container */}
-          <div className="h-32 md:h-52 w-full bg-gray-50 relative overflow-hidden shrink-0 rounded-t-[1.5rem] md:rounded-t-[2.3rem]">
+          <div className="h-32 md:h-52 w-full bg-gray-50 relative overflow-hidden shrink-0">
             <motion.img 
               src={recipe.coverImage} 
               alt={recipe.title}
               loading="lazy"
               style={{ x: imgX, y: imgY, scale: 1.15 }}
-              className="w-full h-full object-cover transition-transform duration-700 ease-out will-change-transform"
+              className="w-full h-full object-cover transition-transform duration-700 ease-out will-change-transform group-hover:scale-120"
               referrerPolicy="no-referrer"
             />
             
