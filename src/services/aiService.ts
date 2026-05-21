@@ -35,3 +35,22 @@ export async function extractRecipe(text: string, source: string) {
     throw error;
   }
 }
+
+export async function extractIngredients(text: string) {
+  try {
+    const res = await fetch('/api/extract-ingredients', {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    
+    const data = await res.json();
+    if (!res.ok) {
+        throw new Error(data.error || "Failed to extract ingredients");
+    }
+    return data.result as { title: string; ingredients: string[] };
+  } catch (error) {
+    console.error("Extract ingredients error:", error);
+    throw error;
+  }
+}

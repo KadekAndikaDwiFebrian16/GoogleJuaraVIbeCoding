@@ -95,8 +95,14 @@
       "description": "User's shopping list items",
       "type": "object",
       "properties": {
-        "items": { "type": "array" }
-      }
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "items": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title"]
     },
     "CustomRecipe": {
       "title": "Custom Recipe",

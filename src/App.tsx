@@ -16,6 +16,7 @@ import Loader from './components/Loader';
 import CookingTimer from './components/CookingTimer';
 
 import ShoppingList from './pages/ShoppingList';
+import ShoppingListDetail from './pages/ShoppingListDetail';
 import CustomRecipes from './pages/CustomRecipes';
 import CustomRecipeDetail from './pages/CustomRecipeDetail';
 
@@ -54,6 +55,13 @@ function AnimatedRoutes() {
           <ProtectedRoute>
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
               <ShoppingList />
+            </motion.div>
+          </ProtectedRoute>
+        } />
+        <Route path="/shopping-list/:id" element={
+          <ProtectedRoute>
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+              <ShoppingListDetail />
             </motion.div>
           </ProtectedRoute>
         } />

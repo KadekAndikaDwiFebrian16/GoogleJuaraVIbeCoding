@@ -78,3 +78,19 @@ export interface Suggestion {
   status: 'pending' | 'reviewed' | 'added';
   createdAt: string;
 }
+
+export interface ShoppingItem {
+  id: string;
+  name: string;
+  checked: boolean;
+}
+
+export interface ShoppingList {
+  id: string;
+  userId: string;
+  title: string;
+  items: ShoppingItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+

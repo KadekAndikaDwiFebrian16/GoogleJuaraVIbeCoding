@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, Salad, Loader2, Save } from 'lucide-react';
+import { X, Send, Salad, Loader2, Save, ShoppingCart } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { askAssistant, extractRecipe } from '../services/aiService';
+import { askAssistant, extractRecipe, extractIngredients } from '../services/aiService';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../lib/firebase';
 import { collection, doc, setDoc } from 'firebase/firestore';
@@ -20,6 +20,7 @@ export default function ChefChat({ isOpen, onToggle }: { isOpen: boolean, onTogg
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [savingRecipe, setSavingRecipe] = useState(false);
+  const [savingIngredients, setSavingIngredients] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -48,6 +49,39 @@ export default function ChefChat({ isOpen, onToggle }: { isOpen: boolean, onTogg
       setMessages(prev => [...prev, { role: 'ai', text: 'Maaf, saya sedang mengalami kendala teknis. Coba lagi nanti ya!' }]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveToShoppingList = async (text: string) => {
+    if (!user || savingIngredients) return;
+    setSavingIngredients(true);
+    try {
+      const extracted = await extractIngredients(text);
+      if (extracted && extracted.ingredients && extracted.ingredients.length > 0) {
+        const newId = doc(collection(db, 'shoppingLists')).id;
+        const now = new Date().toISOString();
+        await setDoc(doc(db, 'shoppingLists', newId), {
+          id: newId,
+          userId: user.uid,
+          title: extracted.title || 'Daftar Belanja Chef AI',
+          items: extracted.ingredients.map(ing => ({
+            id: (Date.now() + Math.random()).toString(),
+            name: ing,
+            checked: false
+          })),
+          createdAt: now,
+          updatedAt: now
+        });
+        navigate(`/shopping-list/${newId}`);
+        onToggle(); // Close chat
+      } else {
+        alert("Bahan makanan sehat tidak terdeteksi di pesan ini.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Gagal menyarikan bahan makanan. Pastikan teks berisi bahan makanan.");
+    } finally {
+      setSavingIngredients(false);
     }
   };
 
@@ -124,14 +158,24 @@ export default function ChefChat({ isOpen, onToggle }: { isOpen: boolean, onTogg
                     <ReactMarkdown>{msg.text}</ReactMarkdown>
                   </div>
                   {msg.role === 'ai' && (
-                    <button
-                      onClick={() => handleSaveToCustomRecipe(msg.text)}
-                      disabled={savingRecipe}
-                      className="mt-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg transition-colors border border-orange-200/50"
-                    >
-                      {savingRecipe ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
-                      Simpan Resep
-                    </button>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        onClick={() => handleSaveToCustomRecipe(msg.text)}
+                        disabled={savingRecipe || savingIngredients}
+                        className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg transition-colors border border-orange-200/50"
+                      >
+                        {savingRecipe ? <Loader2 size = {12} className="animate-spin" /> : <Save size={12} />}
+                        Simpan Resep
+                      </button>
+                      <button
+                        onClick={() => handleSaveToShoppingList(msg.text)}
+                        disabled={savingRecipe || savingIngredients}
+                        className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors border border-emerald-200/50"
+                      >
+                        {savingIngredients ? <Loader2 size={12} className="animate-spin" /> : <ShoppingCart size={12} />}
+                        Simpan Belanja
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

@@ -336,6 +336,41 @@ ${text}`,
     }
   });
 
+  app.post("/api/extract-ingredients", async (req, res) => {
+    try {
+      const { text } = req.body;
+      const ai = getGenAI();
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-lite",
+        contents: `Ekstrak daftar bahan makanan sehat yang perlu dibeli dari teks berikut dalam format JSON murni dengan skema:
+{
+  "title": "Nama Makanan / Kategori Menu Belanja",
+  "ingredients": [
+    "Nama Bahan beserta takaran/jumlahnya jika ada (contoh: Dada Ayam 500g)",
+    "Bahan kedua"
+  ]
+}
+Aturan Penting:
+1. Hanya kembalikan JSON murni. Jangan tambahkan penjelasan lain di luar JSON.
+2. Saring bumbu dapur standar seperti garam atau air dari daftar belanjaan agar lebih bersih (fokus bahan utama).
+3. Buat judul (title) yang singkat dan bermakna.
+
+Teks:
+${text}`,
+      });
+      const resultText = response.text || "";
+      const jsonStrMatch = resultText.match(/\{[\s\S]*\}/);
+      if (jsonStrMatch) {
+         res.json({ result: JSON.parse(jsonStrMatch[0]) });
+      } else {
+         res.status(400).json({ error: "Failed to extract ingredients" });
+      }
+    } catch (error) {
+      console.error("Extract ingredients error:", error);
+      res.status(500).json({ error: "Internal error" });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

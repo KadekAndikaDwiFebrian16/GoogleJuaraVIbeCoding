@@ -52,40 +52,28 @@ export default function MealPlannerChat({ isOpen, onToggle }: { isOpen: boolean,
   };
 
   const handleSaveShoppingList = async (items: string[]) => {
+    if (!user || !items || items.length === 0) return;
     try {
-      const existingStr = localStorage.getItem('dapursehat_shopping_list');
-      let existingItems = existingStr ? JSON.parse(existingStr) : [];
-      
-      if (user) {
-        try {
-          const userDoc = await getDoc(doc(db, 'shoppingLists', user.uid));
-          if (userDoc.exists()) {
-             const data = userDoc.data();
-             existingItems = data.items || [];
-          }
-        } catch(e) {
-           console.error("Failed to read from firebase inside chat", e);
-        }
-      }
+      const newId = doc(collection(db, 'shoppingLists')).id;
+      const now = new Date().toISOString();
+      await setDoc(doc(db, 'shoppingLists', newId), {
+        id: newId,
+        userId: user.uid,
+        title: 'Bahan Meal Planner',
+        items: items.map(item => ({
+          id: (Date.now() + Math.random()).toString(),
+          name: item,
+          checked: false
+        })),
+        createdAt: now,
+        updatedAt: now
+      });
 
-      const newItems = items.map(item => ({ id: Date.now().toString() + Math.random(), name: item, checked: false }));
-      const merged = [...existingItems, ...newItems];
-
-      localStorage.setItem('dapursehat_shopping_list', JSON.stringify(merged));
-      
-      if (user) {
-        try {
-          await setDoc(doc(db, 'shoppingLists', user.uid), { items: merged });
-        } catch(e) {
-          console.error("Failed to update firestore", e);
-        }
-      }
-
-      window.dispatchEvent(new Event('shopping_list_updated'));
       onToggle(); // Close chat
-      navigate('/shopping-list');
+      navigate(`/shopping-list/${newId}`);
     } catch (e) {
       console.error(e);
+      alert("Gagal menyimpan daftar belanja.");
     }
   };
 
