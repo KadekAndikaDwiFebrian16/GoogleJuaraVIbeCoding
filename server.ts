@@ -59,29 +59,61 @@ async function startServer() {
     }
   };
 
+  // Safe, atomic, and race-free notification dispatcher.
+  // It instantly cleans state BEFORE triggering the network call to totally prevent double delivery.
+  const sendPushNotificationSafely = (timerId: string, task: PushTask) => {
+    if (!scheduledTasks[timerId]) return; // Already sent/handled by another worker or tick
+
+    console.log(`[Push Notification] Starting atomic dispatch for timer ${timerId}`);
+    
+    // Clear timeout if running
+    if (scheduledTimeouts[timerId]) {
+      clearTimeout(scheduledTimeouts[timerId]);
+      delete scheduledTimeouts[timerId];
+    }
+
+    // Save subscription and payload locally
+    const { subscription, payload } = task;
+
+    // Delete tasks instantly to prevent any secondary ticks from seeing this task
+    delete scheduledTasks[timerId];
+    saveScheduledTasks();
+
+    // Trigger the real push notification through VAPID protocol
+    webPush.sendNotification(subscription, JSON.stringify(payload))
+      .then(() => {
+        console.log(`[Push Notification] Successfully sent push for timer: ${timerId}`);
+      })
+      .catch(err => {
+        console.error(`[Push Notification] Error sending push for ${timerId}:`, err);
+      });
+  };
+
   const loadScheduledTasks = () => {
     try {
       if (fs.existsSync(SCHEDULED_PUSHES_FILE)) {
         scheduledTasks = JSON.parse(fs.readFileSync(SCHEDULED_PUSHES_FILE, 'utf-8'));
         const now = Date.now();
+        let changed = false;
         
         Object.entries(scheduledTasks).forEach(([timerId, task]) => {
           const delay = task.targetTime - now;
           if (delay <= 0) {
             // Already past due, send now
-            webPush.sendNotification(task.subscription, JSON.stringify(task.payload)).catch(() => {});
-            delete scheduledTasks[timerId];
+            sendPushNotificationSafely(timerId, task);
+            changed = true;
           } else {
-            // Schedule it
+            // Schedule standard timeout
             scheduledTimeouts[timerId] = setTimeout(() => {
-              webPush.sendNotification(task.subscription, JSON.stringify(task.payload)).catch(() => {});
-              delete scheduledTasks[timerId];
-              delete scheduledTimeouts[timerId];
-              saveScheduledTasks();
+              if (scheduledTasks[timerId]) {
+                sendPushNotificationSafely(timerId, scheduledTasks[timerId]);
+              }
             }, delay);
           }
         });
-        saveScheduledTasks();
+        if (changed) {
+          saveScheduledTasks();
+        }
       }
     } catch (e) {
       console.error("Error loading scheduled pushes", e);
@@ -89,6 +121,42 @@ async function startServer() {
   };
 
   loadScheduledTasks();
+
+  // Active fallback scheduler loop: check every 5 seconds for past-due tasks.
+  // This behaves as a robust safeguard if setTimeout is delayed, choked by serverless CPU limits,
+  // or garbage collected under load, ensuring long-running timers (>= 1 hour) are extremely reliable.
+  setInterval(() => {
+    const now = Date.now();
+    Object.entries(scheduledTasks).forEach(([timerId, task]) => {
+      if (task.targetTime <= now) {
+        sendPushNotificationSafely(timerId, task);
+      }
+    });
+  }, 5000);
+
+  // Self-keep-alive loop to prevent the container from being frozen or scaled down to 0
+  // while there are active scheduled timers running in scheduledTasks.
+  setInterval(() => {
+    const activeTasksCount = Object.keys(scheduledTasks).length;
+    if (activeTasksCount > 0) {
+      console.log(`[Keep-Alive] There are ${activeTasksCount} active timers. Pinging local server to avoid scale-down...`);
+      fetch("http://localhost:3000/api/health")
+        .then(() => console.log("[Keep-Alive] Local ping successful"))
+        .catch(err => console.warn("[Keep-Alive] Local ping warning:", err.message));
+    }
+  }, 120000); // Ping every 2 minutes if timers are active
+
+  // Lazy cron / scheduler middleware on every API access.
+  // Ensures any incoming request immediately forces a check and flushes due notifications.
+  app.use("/api", (req, res, next) => {
+    const now = Date.now();
+    Object.entries(scheduledTasks).forEach(([timerId, task]) => {
+      if (task.targetTime <= now) {
+        sendPushNotificationSafely(timerId, task);
+      }
+    });
+    next();
+  });
 
   app.get("/api/vapidPublicKey", (_req, res) => {
     res.json({ publicKey: vapidKeys.publicKey });
@@ -104,6 +172,7 @@ async function startServer() {
 
     if (scheduledTimeouts[timerId]) {
       clearTimeout(scheduledTimeouts[timerId]);
+      delete scheduledTimeouts[timerId];
     }
 
     const targetTime = Date.now() + delayMs;
@@ -112,11 +181,9 @@ async function startServer() {
 
     // Schedule the push notification
     scheduledTimeouts[timerId] = setTimeout(() => {
-      webPush.sendNotification(subscription, JSON.stringify(payload))
-        .catch(err => console.error("Error sending push notification:", err));
-      delete scheduledTasks[timerId];
-      delete scheduledTimeouts[timerId];
-      saveScheduledTasks();
+      if (scheduledTasks[timerId]) {
+        sendPushNotificationSafely(timerId, scheduledTasks[timerId]);
+      }
     }, delayMs);
 
     res.json({ status: "scheduled", delayMs, timerId });
@@ -124,11 +191,20 @@ async function startServer() {
 
   app.post("/api/cancel-push", (req, res) => {
     const { timerId } = req.body;
-    if (timerId && scheduledTimeouts[timerId]) {
-      clearTimeout(scheduledTimeouts[timerId]);
-      delete scheduledTimeouts[timerId];
-      delete scheduledTasks[timerId];
-      saveScheduledTasks();
+    let changed = false;
+    
+    if (timerId) {
+      if (scheduledTimeouts[timerId]) {
+        clearTimeout(scheduledTimeouts[timerId]);
+        delete scheduledTimeouts[timerId];
+      }
+      if (scheduledTasks[timerId]) {
+        delete scheduledTasks[timerId];
+        changed = true;
+      }
+      if (changed) {
+        saveScheduledTasks();
+      }
     }
     res.json({ status: "cancelled" });
   });

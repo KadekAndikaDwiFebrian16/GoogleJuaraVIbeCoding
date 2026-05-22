@@ -53,25 +53,72 @@ export default function CookingTimer() {
   const isOpen = activeComponent === 'timer';
   const setIsOpen = (open: boolean) => setActiveComponent(open ? 'timer' : null);
 
-  const [minutes, setMinutes] = useState(5);
-  const [seconds, setSeconds] = useState(0);
-  const [isActive, setIsActive] = useState(false);
-  const [isFinished, setIsFinished] = useState(false);
+  const [minutes, setMinutes] = useState(() => {
+    const savedMins = localStorage.getItem('cooking_timer_minutes');
+    return savedMins ? parseInt(savedMins, 10) : 5;
+  });
+  const [seconds, setSeconds] = useState(() => {
+    const savedSecs = localStorage.getItem('cooking_timer_seconds');
+    return savedSecs ? parseInt(savedSecs, 10) : 0;
+  });
+  const [isActive, setIsActive] = useState(() => {
+    return localStorage.getItem('cooking_timer_active') === 'true';
+  });
+  const [isFinished, setIsFinished] = useState(() => {
+    return localStorage.getItem('cooking_timer_finished') === 'true';
+  });
   const [showIOSWarning, setShowIOSWarning] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const targetTimeRef = useRef<number | null>(null);
+  const targetTimeRef = useRef<number | null>(
+    localStorage.getItem('cooking_timer_target_time') 
+      ? parseInt(localStorage.getItem('cooking_timer_target_time')!, 10) 
+      : null
+  );
   const audioContextRef = useRef<AudioContext | null>(null);
   const alarmIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const silentAudioRef = useRef<HTMLAudioElement | null>(null);
-  const webPushTimerIdRef = useRef<string | null>(null);
+  const webPushTimerIdRef = useRef<string | null>(localStorage.getItem('cooking_timer_push_id') || null);
   const isPlayingAlarmRef = useRef(false);
+
+  // Helper to persist state to localStorage
+  const persistTimerState = (active: boolean, finished: boolean, mins: number, secs: number, target: number | null) => {
+    try {
+      localStorage.setItem('cooking_timer_active', active ? 'true' : 'false');
+      localStorage.setItem('cooking_timer_finished', finished ? 'true' : 'false');
+      localStorage.setItem('cooking_timer_minutes', mins.toString());
+      localStorage.setItem('cooking_timer_seconds', secs.toString());
+      localStorage.setItem('cooking_timer_target_time', target ? target.toString() : '');
+      if (webPushTimerIdRef.current) {
+        localStorage.setItem('cooking_timer_push_id', webPushTimerIdRef.current);
+      } else {
+        localStorage.removeItem('cooking_timer_push_id');
+      }
+    } catch (e) {
+      console.error('Failed to save state to localStorage', e);
+    }
+  };
+
+  const clearPersistedState = () => {
+    try {
+      localStorage.removeItem('cooking_timer_active');
+      localStorage.removeItem('cooking_timer_finished');
+      localStorage.removeItem('cooking_timer_minutes');
+      localStorage.removeItem('cooking_timer_seconds');
+      localStorage.removeItem('cooking_timer_target_time');
+      localStorage.removeItem('cooking_timer_push_id');
+    } catch (e) {
+      console.error('Failed to clear state from localStorage', e);
+    }
+  };
 
   const scheduleWebPush = async (delayMs: number, subscription: any) => {
     try {
       if (subscription) {
         const timerId = Date.now().toString() + Math.random().toString(36);
         webPushTimerIdRef.current = timerId;
+        localStorage.setItem('cooking_timer_push_id', timerId);
+        
         const res = await fetch('/api/schedule-push', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -88,11 +135,13 @@ export default function CookingTimer() {
         });
         if (!res.ok) {
           webPushTimerIdRef.current = null;
+          localStorage.removeItem('cooking_timer_push_id');
         }
       }
     } catch (e) {
       console.error('Failed to schedule web push', e);
       webPushTimerIdRef.current = null;
+      localStorage.removeItem('cooking_timer_push_id');
     }
   };
 
@@ -100,6 +149,7 @@ export default function CookingTimer() {
     const currentTimerId = webPushTimerIdRef.current;
     if (currentTimerId) {
       webPushTimerIdRef.current = null;
+      localStorage.removeItem('cooking_timer_push_id');
       await fetch('/api/cancel-push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -114,6 +164,39 @@ export default function CookingTimer() {
     audio.src = "data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq==";
     audio.loop = true;
     silentAudioRef.current = audio;
+
+    // Load persisted state and check if timer finished while app was closed or tab was destroyed
+    const savedActive = localStorage.getItem('cooking_timer_active') === 'true';
+    const savedTargetStr = localStorage.getItem('cooking_timer_target_time');
+    
+    if (savedActive && savedTargetStr) {
+      const savedTarget = parseInt(savedTargetStr, 10);
+      const now = Date.now();
+      
+      if (savedTarget <= now) {
+        setIsActive(false);
+        setIsFinished(true);
+        setMinutes(0);
+        setSeconds(0);
+        targetTimeRef.current = null;
+        persistTimerState(false, true, 0, 0, null);
+        setIsOpen(true);
+        playAlarm({ skipNotification: false });
+      } else {
+        const remainingMs = savedTarget - now;
+        const totalSecs = Math.ceil(remainingMs / 1000);
+        setMinutes(Math.floor(totalSecs / 60));
+        setSeconds(totalSecs % 60);
+        setIsActive(true);
+        setIsOpen(true);
+      }
+    } else if (localStorage.getItem('cooking_timer_finished') === 'true') {
+      setIsFinished(true);
+      setMinutes(0);
+      setSeconds(0);
+      setIsOpen(true);
+      playAlarm({ skipNotification: false });
+    }
   }, []);
 
   const requestNotificationPermission = async () => {
@@ -252,6 +335,14 @@ export default function CookingTimer() {
       if (duration) {
         silentAudioRef.current?.play().catch(() => {});
         
+        // Disable first to fully stop any old alarms, active intervals, and cleanly trigger teardown
+        setIsActive(false);
+        setIsFinished(false);
+        stopAlarm();
+        
+        // CRITICAL: First cancel any existing push on the server to prevent duplicates
+        await cancelWebPush();
+        
         // Ask for permission in the active user action sequence
         const permissionGranted = await requestNotificationPermission();
         await ensureAudioContext();
@@ -261,20 +352,36 @@ export default function CookingTimer() {
         
         setMinutes(duration);
         setSeconds(0);
-        setIsActive(true);
-        setIsOpen(true);
-        setIsFinished(false);
         const durationMs = (duration * 60) * 1000;
-        targetTimeRef.current = Date.now() + durationMs;
+        const target = Date.now() + durationMs;
+        targetTimeRef.current = target;
+        
+        // Persist local state securely
+        persistTimerState(true, false, duration, 0, target);
+        
         if (subscription) scheduleWebPush(durationMs, subscription);
+
+        // Turn active back on inside a tiny timeout to ensure React triggers a clean mount cycle of the loop
+        setTimeout(() => {
+          setIsActive(true);
+          setIsOpen(true);
+        }, 10);
       }
     };
 
     const handleSWMessage = (event: MessageEvent) => {
-      if (event.data && event.data.type === 'TIMER_FINISHED') {
-        stopAlarm();
-        setIsFinished(false);
-        setIsOpen(true);
+      if (event.data) {
+        if (event.data.type === 'TIMER_FINISHED' || event.data.type === 'TIMER_FINISHED_PUSH') {
+          stopAlarm();
+          setIsActive(false);
+          setIsFinished(true);
+          setMinutes(0);
+          setSeconds(0);
+          targetTimeRef.current = null;
+          persistTimerState(false, true, 0, 0, null);
+          setIsOpen(true);
+          playAlarm({ skipNotification: true });
+        }
       }
     };
 
@@ -294,7 +401,9 @@ export default function CookingTimer() {
   useEffect(() => {
     if (isActive) {
       if (!targetTimeRef.current) {
-        targetTimeRef.current = Date.now() + (minutes * 60 + seconds) * 1000;
+        const target = Date.now() + (minutes * 60 + seconds) * 1000;
+        targetTimeRef.current = target;
+        persistTimerState(true, false, minutes, seconds, target);
       }
 
       intervalRef.current = setInterval(() => {
@@ -303,14 +412,19 @@ export default function CookingTimer() {
         
         if (diff > 0) {
           const totalSecs = Math.ceil(diff / 1000);
-          setMinutes(Math.floor(totalSecs / 60));
-          setSeconds(totalSecs % 60);
+          const mins = Math.floor(totalSecs / 60);
+          const secs = totalSecs % 60;
+          setMinutes(mins);
+          setSeconds(secs);
+          persistTimerState(true, false, mins, secs, targetTimeRef.current);
         } else {
           setIsActive(false);
           setIsFinished(true);
           setMinutes(0);
           setSeconds(0);
           targetTimeRef.current = null;
+          persistTimerState(false, true, 0, 0, null);
+          
           silentAudioRef.current?.pause();
           if ((window as any).backgroundSilentAudio) {
             (window as any).backgroundSilentAudio.pause();
@@ -319,17 +433,16 @@ export default function CookingTimer() {
           playAlarm({ skipNotification: hasWebPush });
           webPushTimerIdRef.current = null;
         }
-      }, 200); // Higher frequency check for accuracy
+      }, 1000); // 1-second ticks is plenty of accuracy & resource-friendly
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      targetTimeRef.current = null;
     }
     
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       stopAlarm();
     };
-  }, [isActive, minutes, seconds]);
+  }, [isActive]);
 
   const toggleTimer = async () => {
     if (!isActive) {
@@ -351,15 +464,19 @@ export default function CookingTimer() {
     // Subscribe to push notifications safely
     const subscription = permissionGranted ? await getPushSubscription().catch(() => null) : null;
     
-    if (!isActive) {
+    const nextActive = !isActive;
+    if (nextActive) {
       const remainingMs = (minutes * 60 + seconds) * 1000;
-      targetTimeRef.current = Date.now() + remainingMs;
+      const target = Date.now() + remainingMs;
+      targetTimeRef.current = target;
+      persistTimerState(true, false, minutes, seconds, target);
       if (subscription) scheduleWebPush(remainingMs, subscription);
     } else {
       targetTimeRef.current = null;
+      persistTimerState(false, false, minutes, seconds, null);
       cancelWebPush();
     }
-    setIsActive(!isActive);
+    setIsActive(nextActive);
   };
   
   const resetTimer = async () => {
@@ -370,7 +487,8 @@ export default function CookingTimer() {
     setSeconds(0);
     targetTimeRef.current = null;
     stopAlarm();
-    cancelWebPush();
+    await cancelWebPush();
+    clearPersistedState();
     silentAudioRef.current?.pause();
     if ((window as any).backgroundSilentAudio) {
       (window as any).backgroundSilentAudio.pause();
@@ -379,20 +497,29 @@ export default function CookingTimer() {
 
   const adjustTime = (type: 'min' | 'sec', amount: number) => {
     if (isActive) return;
+    let newMins = minutes;
+    let newSecs = seconds;
     if (type === 'min') {
-      setMinutes(Math.max(0, minutes + amount));
+      newMins = Math.max(0, minutes + amount);
+      setMinutes(newMins);
     } else {
       let newSec = seconds + amount;
       if (newSec >= 60) {
-        setMinutes(minutes + Math.floor(newSec / 60));
-        setSeconds(newSec % 60);
+        newMins = minutes + Math.floor(newSec / 60);
+        newSecs = newSec % 60;
+        setMinutes(newMins);
+        setSeconds(newSecs);
       } else if (newSec < 0 && minutes > 0) {
-        setMinutes(Math.max(0, minutes - 1));
-        setSeconds(60 + newSec);
+        newMins = Math.max(0, minutes - 1);
+        newSecs = 60 + newSec;
+        setMinutes(newMins);
+        setSeconds(newSecs);
       } else {
-        setSeconds(Math.max(0, newSec));
+        newSecs = Math.max(0, newSec);
+        setSeconds(newSecs);
       }
     }
+    persistTimerState(false, false, newMins, newSecs, null);
   };
 
   const isRecipePage = location.pathname.startsWith('/recipe') || location.pathname.startsWith('/custom-recipe');
