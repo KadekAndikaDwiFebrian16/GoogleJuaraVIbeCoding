@@ -101,5 +101,10 @@ service cloud.firestore {
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow read, update, delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
     }
+
+    // --- Collection: Scheduled Pushes ---
+    match /scheduled_pushes/{pushId} {
+      allow read, write: if true;
+    }
   }
 }

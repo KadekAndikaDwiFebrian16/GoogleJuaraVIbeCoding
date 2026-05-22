@@ -158,14 +158,8 @@ export default function CookingTimer() {
     }
   };
 
-  useEffect(() => {
-    // Create a 1-second silent audio element to keep iOS Safari alive in the background
-    const audio = new Audio();
-    audio.src = "data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq==";
-    audio.loop = true;
-    silentAudioRef.current = audio;
-
-    // Load persisted state and check if timer finished while app was closed or tab was destroyed
+  // Helper to sync timer state dynamically (especially on iOS Safari wake / background-to-foreground transitions)
+  const syncTimerState = () => {
     const savedActive = localStorage.getItem('cooking_timer_active') === 'true';
     const savedTargetStr = localStorage.getItem('cooking_timer_target_time');
     
@@ -197,6 +191,29 @@ export default function CookingTimer() {
       setIsOpen(true);
       playAlarm({ skipNotification: false });
     }
+  };
+
+  useEffect(() => {
+    // Create a 1-second silent audio element to keep iOS Safari alive in the background
+    const audio = new Audio();
+    audio.src = "data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq==";
+    audio.loop = true;
+    silentAudioRef.current = audio;
+
+    // Synchronize current state initially
+    syncTimerState();
+
+    // Listen to visibilitychange event (extremely critical for iOS Safari background/lockscreen wake up state sync)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncTimerState();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const requestNotificationPermission = async () => {
@@ -523,24 +540,217 @@ export default function CookingTimer() {
   };
 
   const isRecipePage = location.pathname.startsWith('/recipe') || location.pathname.startsWith('/custom-recipe');
+  const isBeranda = !isRecipePage;
+
+  // Enforce screen boundaries to keep timer fully visible
+  const getConstrainedOffset = (x: number, y: number) => {
+    const isMd = window.matchMedia('(min-width: 768px)').matches;
+    const originLeft = isMd ? 24 : 16;
+    const originBottom = isMd ? 104 : 96;
+    const size = 64; // Button is 64x64px (w-16 h-16)
+    const margin = 8; // Distance to keep from screen edges
+
+    const minX = -originLeft + margin;
+    const maxX = window.innerWidth - originLeft - size - margin;
+    
+    const minY = -(window.innerHeight - (originBottom + size) - margin);
+    const maxY = originBottom - margin;
+
+    return {
+      x: Math.max(minX, Math.min(maxX, x)),
+      y: Math.max(minY, Math.min(maxY, y))
+    };
+  };
+
+  // Real-time custom dragged position loaded from localStorage
+  const [offset, setOffset] = useState(() => {
+    const savedX = localStorage.getItem('cooking_timer_pos_x');
+    const savedY = localStorage.getItem('cooking_timer_pos_y');
+    return {
+      x: savedX ? parseFloat(savedX) : 0,
+      y: savedY ? parseFloat(savedY) : 0
+    };
+  });
+
+  const dragRef = useRef({
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    startOffsetX: 0,
+    startOffsetY: 0,
+    currentOffsetX: 0,
+    currentOffsetY: 0,
+    hasDragged: false,
+    holdTimeout: null as any
+  });
 
   useEffect(() => {
-    if (!isRecipePage) {
-      resetTimer();
-    }
-  }, [isRecipePage]);
+    // Sync current offset values to ref
+    dragRef.current.currentOffsetX = offset.x;
+    dragRef.current.currentOffsetY = offset.y;
+  }, [offset.x, offset.y]);
 
-  if (!isRecipePage) return null;
+  // Adjust on initial mount and when screen resizing to prevent bleeding outside the screen
+  useEffect(() => {
+    setOffset(prev => getConstrainedOffset(prev.x, prev.y));
+
+    const handleResize = () => {
+      setOffset(prev => getConstrainedOffset(prev.x, prev.y));
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // desktop left-click drag
+    if (e.button === 0) {
+      dragRef.current.isDragging = true;
+      dragRef.current.startX = e.clientX;
+      dragRef.current.startY = e.clientY;
+      dragRef.current.startOffsetX = offset.x;
+      dragRef.current.startOffsetY = offset.y;
+      dragRef.current.hasDragged = false;
+      
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!dragRef.current.isDragging) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      dragRef.current.hasDragged = true;
+    }
+    
+    const newX = dragRef.current.startOffsetX + dx;
+    const newY = dragRef.current.startOffsetY + dy;
+    
+    // Apply boundaries
+    const constrainedPos = getConstrainedOffset(newX, newY);
+    dragRef.current.currentOffsetX = constrainedPos.x;
+    dragRef.current.currentOffsetY = constrainedPos.y;
+    setOffset(constrainedPos);
+  };
+
+  const handleMouseUp = () => {
+    dragRef.current.isDragging = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+    
+    localStorage.setItem('cooking_timer_pos_x', dragRef.current.currentOffsetX.toString());
+    localStorage.setItem('cooking_timer_pos_y', dragRef.current.currentOffsetY.toString());
+    
+    setTimeout(() => {
+      dragRef.current.hasDragged = false;
+    }, 100);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    dragRef.current.startX = touch.clientX;
+    dragRef.current.startY = touch.clientY;
+    dragRef.current.startOffsetX = offset.x;
+    dragRef.current.startOffsetY = offset.y;
+    dragRef.current.hasDragged = false;
+    dragRef.current.isDragging = false;
+    
+    if (dragRef.current.holdTimeout) {
+      clearTimeout(dragRef.current.holdTimeout);
+    }
+    
+    // Hold threshold of 350ms to activate touch dragging
+    dragRef.current.holdTimeout = setTimeout(() => {
+      dragRef.current.isDragging = true;
+      dragRef.current.hasDragged = true;
+      if (navigator.vibrate) {
+        navigator.vibrate(40);
+      }
+    }, 350);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const dx = touch.clientX - dragRef.current.startX;
+    const dy = touch.clientY - dragRef.current.startY;
+    
+    if (!dragRef.current.isDragging) {
+      if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+        if (dragRef.current.holdTimeout) {
+          clearTimeout(dragRef.current.holdTimeout);
+          dragRef.current.holdTimeout = null;
+        }
+      }
+      return;
+    }
+    
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+    
+    const newX = dragRef.current.startOffsetX + dx;
+    const newY = dragRef.current.startOffsetY + dy;
+    
+    // Apply boundaries
+    const constrainedPos = getConstrainedOffset(newX, newY);
+    dragRef.current.currentOffsetX = constrainedPos.x;
+    dragRef.current.currentOffsetY = constrainedPos.y;
+    setOffset(constrainedPos);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (dragRef.current.holdTimeout) {
+      clearTimeout(dragRef.current.holdTimeout);
+      dragRef.current.holdTimeout = null;
+    }
+    
+    if (dragRef.current.isDragging) {
+      e.preventDefault();
+      dragRef.current.isDragging = false;
+      localStorage.setItem('cooking_timer_pos_x', dragRef.current.currentOffsetX.toString());
+      localStorage.setItem('cooking_timer_pos_y', dragRef.current.currentOffsetY.toString());
+      
+      setTimeout(() => {
+        dragRef.current.hasDragged = false;
+      }, 100);
+    }
+  };
+
+  // Securely clean up any global listeners on unmount
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      if (dragRef.current.holdTimeout) {
+        clearTimeout(dragRef.current.holdTimeout);
+      }
+    };
+  }, []);
+
+  const shouldRender = isRecipePage || isActive || isFinished;
+
+  if (!shouldRender) return null;
 
   return (
-    <div className="fixed bottom-6 left-6 z-[120]">
+    <div 
+      className="fixed bottom-24 md:bottom-[104px] left-4 md:left-6 z-[120]"
+      style={{
+        transform: `translate3d(${offset.x}px, ${offset.y}px, 0)`,
+        touchAction: 'none'
+      }}
+    >
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="absolute bottom-full left-0 mb-4 w-[calc(100vw-48px)] sm:w-64 bg-white rounded-3xl shadow-xl shadow-orange-100/30 p-6 border border-gray-100 overflow-hidden"
+            className="absolute bottom-full left-0 mb-4 w-[calc(100vw-48px)] sm:w-64 bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl shadow-orange-950/10 p-6 border border-gray-100/80 overflow-hidden"
           >
             {isFinished && (
               <motion.div 
@@ -559,7 +769,8 @@ export default function CookingTimer() {
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Shotclock Memasak</span>
               <button 
                 onClick={(e) => { e.stopPropagation(); resetTimer(); }} 
-                className="text-gray-400 hover:text-gray-600 flex items-center justify-center w-6 h-6"
+                className="text-gray-400 hover:text-gray-600 flex items-center justify-center w-6 h-6 rounded-lg hover:bg-gray-50 transition-colors"
+                title="Reset ulang"
               >
                 <RotateCcw size={14} />
               </button>
@@ -568,26 +779,26 @@ export default function CookingTimer() {
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-2 mb-6">
                 <div className="flex flex-col items-center">
-                  <button onClick={() => adjustTime('min', 1)} className="text-gray-300 hover:text-gray-600 px-2">▲</button>
-                  <span className="text-4xl font-black text-gray-900 tabular-nums">{minutes.toString().padStart(2, '0')}</span>
-                  <button onClick={() => adjustTime('min', -1)} className="text-gray-300 hover:text-gray-600 px-2">▼</button>
+                  <button onClick={() => adjustTime('min', 1)} className="text-gray-300 hover:text-gray-600 px-2 transition-colors">▲</button>
+                  <span className="text-4xl font-black text-gray-900 tabular-nums font-sans tracking-tight">{minutes.toString().padStart(2, '0')}</span>
+                  <button onClick={() => adjustTime('min', -1)} className="text-gray-300 hover:text-gray-600 px-2 transition-colors">▼</button>
                 </div>
-                <span className="text-4xl font-black text-gray-200">:</span>
+                <span className="text-4xl font-black text-gray-200 font-sans">:</span>
                 <div className="flex flex-col items-center">
-                  <button onClick={() => adjustTime('sec', 10)} className="text-gray-300 hover:text-gray-600 px-2">▲</button>
-                  <span className="text-4xl font-black text-gray-900 tabular-nums">{seconds.toString().padStart(2, '0')}</span>
-                  <button onClick={() => adjustTime('sec', -10)} className="text-gray-300 hover:text-gray-600 px-2">▼</button>
+                  <button onClick={() => adjustTime('sec', 10)} className="text-gray-300 hover:text-gray-600 px-2 transition-colors">▲</button>
+                  <span className="text-4xl font-black text-gray-900 tabular-nums font-sans tracking-tight">{seconds.toString().padStart(2, '0')}</span>
+                  <button onClick={() => adjustTime('sec', -10)} className="text-gray-300 hover:text-gray-600 px-2 transition-colors">▼</button>
                 </div>
               </div>
 
               <div className="flex gap-3 w-full">
                 {isFinished ? (
-                  <button
-                    onClick={resetTimer}
-                    className="flex-1 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm bg-orange-600 text-white hover:bg-orange-700 shadow-orange-100"
-                  >
-                    <span className="text-xs font-bold uppercase tracking-widest">Matikan Alarm</span>
-                  </button>
+                   <button
+                     onClick={resetTimer}
+                     className="flex-1 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm bg-orange-600 text-white hover:bg-orange-700 shadow-orange-100"
+                   >
+                     <span className="text-xs font-bold uppercase tracking-widest">Matikan Alarm</span>
+                   </button>
                 ) : (
                   <button
                     onClick={toggleTimer}
@@ -630,20 +841,62 @@ export default function CookingTimer() {
         )}
       </AnimatePresence>
 
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition-all duration-500 ${
-          isOpen ? 'bg-gray-900 text-white' : 'bg-white text-orange-600 border border-gray-100'
-        } ${isActive ? 'ring-4 ring-orange-100' : ''}`}
-      >
-        {isActive ? (
-          <span className="text-[10px] font-black tabular-nums">{minutes}:{seconds.toString().padStart(2, '0')}</span>
-        ) : (
-          <Timer size={24} />
-        )}
-      </motion.button>
+      <div className="relative group/timer-btn">
+        {/* Hover drag instruction tooltip */}
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-gray-950/95 text-white backdrop-blur-sm shadow-xl p-2.5 rounded-2xl border border-gray-800 pointer-events-none opacity-0 group-hover/timer-btn:opacity-100 transition-opacity duration-300 flex flex-col items-center gap-0.5 z-50">
+          <span className="text-[10px] font-black uppercase text-orange-400 tracking-widest whitespace-nowrap">Gestur Menggeser</span>
+          <span className="text-[9px] font-bold text-gray-300 font-sans whitespace-nowrap">💻 Klik Kiri + Tarik | 📱 Tahan + Tarik</span>
+        </div>
+
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onContextMenu={(e) => e.preventDefault()}
+          onClick={() => {
+            if (dragRef.current.hasDragged) {
+              dragRef.current.hasDragged = false;
+              return;
+            }
+            setIsOpen(!isOpen);
+          }}
+          className={`relative flex flex-col items-center justify-center transition-all duration-500 border select-none cursor-grab active:cursor-grabbing w-16 h-16 rounded-[2rem] shadow-2xl ${
+            isOpen 
+              ? 'bg-gray-900 border-gray-900 text-white shadow-gray-950/20' 
+              : 'bg-white text-orange-600 border-orange-50 hover:border-orange-200/50 shadow-orange-950/10 hover:shadow-orange-950/15'
+          } ${isActive ? 'ring-4 ring-orange-100/80' : ''}`}
+        >
+          {isFinished && (
+            <span className="absolute -top-1.5 -right-1.5 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
+            </span>
+          )}
+
+          {/* Premium tiny visual drag handle dots */}
+          {!isActive && !isOpen && (
+            <div className="flex gap-1 justify-center mb-1.5 opacity-40 group-hover/timer-btn:opacity-100 transition-opacity">
+              <span className="w-1 h-1 rounded-full bg-orange-500" />
+              <span className="w-1 h-1 rounded-full bg-orange-500" />
+              <span className="w-1 h-1 rounded-full bg-orange-500" />
+            </div>
+          )}
+          
+          {isActive ? (
+            <span className="text-[11px] font-black tabular-nums font-sans tracking-tight text-orange-600">
+              {minutes}:{seconds.toString().padStart(2, '0')}
+            </span>
+          ) : (
+            <Timer 
+              size={26} 
+              className="transition-transform duration-300 group-hover/timer-btn:rotate-12" 
+            />
+          )}
+        </motion.button>
+      </div>
     </div>
   );
 }

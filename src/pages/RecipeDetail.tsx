@@ -28,6 +28,7 @@ export default function RecipeDetail() {
   const [commentText, setCommentText] = useState('');
   const [rating, setRating] = useState(5);
   const [submitting, setSubmitting] = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -269,12 +270,12 @@ export default function RecipeDetail() {
               
               <div className="relative group/swiper">
                 <Swiper
-                  modules={[Navigation, Pagination]}
+                  modules={[Navigation]}
                   navigation={{
                     prevEl: '.swiper-nav-prev',
                     nextEl: '.swiper-nav-next',
                   }}
-                  pagination={{ clickable: true }}
+                  onSlideChange={(swiper) => setActiveStep(swiper.activeIndex)}
                   autoHeight={true}
                   className="rounded-3xl bg-gray-50 border border-gray-100 overflow-hidden"
                 >
@@ -295,7 +296,7 @@ export default function RecipeDetail() {
                             </p>
                           </div>
 
-                          {step.duration && step.duration > 0 && (
+                          {step.duration > 0 && (
                             <motion.button 
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
@@ -348,19 +349,28 @@ export default function RecipeDetail() {
                   ))}
                 </Swiper>
 
-                {/* Custom Navigation Buttons - Positioned at bottom center flanking pagination */}
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-24 md:gap-32 z-10 pointer-events-none">
-                  <div className="relative">
-                    <button className="swiper-nav-prev pointer-events-auto w-8 h-8 md:w-10 md:h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-orange-600 hover:bg-orange-600 hover:text-white transition-all duration-300 disabled:opacity-0 cursor-pointer shadow-lg shadow-orange-100/50">
-                        <ChevronLeft size={20} />
+                {/* Custom Navigation Stepper - Unified floating pill */}
+                <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center z-10 pointer-events-none">
+                  <div className="flex items-center gap-4 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-gray-100/80 shadow-xl shadow-orange-950/5 pointer-events-auto">
+                    <button className="swiper-nav-prev w-9 h-9 bg-gray-50 hover:bg-orange-50 border border-gray-100 rounded-xl flex items-center justify-center text-gray-700 hover:text-orange-600 transition-all duration-300 disabled:opacity-30 cursor-pointer shadow-sm">
+                      <ChevronLeft size={18} strokeWidth={2.5} />
                     </button>
-                    <div className="absolute -inset-1 rounded-2xl border-2 border-orange-500/10 pointer-events-none" />
-                  </div>
-                  <div className="relative">
-                    <button className="swiper-nav-next pointer-events-auto w-8 h-8 md:w-10 md:h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-orange-600 hover:bg-orange-600 hover:text-white transition-all duration-300 disabled:opacity-0 cursor-pointer shadow-lg shadow-orange-100/50">
-                        <ChevronRight size={20} />
+                    
+                    <div className="flex items-center gap-1.5 px-3 select-none min-w-[64px] justify-center">
+                      <span className="font-sans text-sm font-black text-orange-600 tracking-tight">
+                        {activeStep + 1}
+                      </span>
+                      <span className="text-[10px] uppercase tracking-widest font-black text-gray-300">
+                        /
+                      </span>
+                      <span className="font-sans text-sm font-bold text-gray-500 tracking-tight">
+                        {recipe.instructions.length}
+                      </span>
+                    </div>
+
+                    <button className="swiper-nav-next w-9 h-9 bg-gray-50 hover:bg-orange-50 border border-gray-100 rounded-xl flex items-center justify-center text-gray-700 hover:text-orange-600 transition-all duration-300 disabled:opacity-30 cursor-pointer shadow-sm">
+                      <ChevronRight size={18} strokeWidth={2.5} />
                     </button>
-                    <div className="absolute -inset-1 rounded-2xl border-2 border-orange-500/10 pointer-events-none" />
                   </div>
                 </div>
               </div>

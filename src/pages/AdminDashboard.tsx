@@ -8,6 +8,7 @@ import { Plus, Trash2, MessageSquare, Save, X, Loader2, Salad, Upload, Image as 
 import { motion, AnimatePresence } from 'motion/react';
 import { formatDate } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
+import { useUI } from '../context/UIContext';
 
 export default function AdminDashboard() {
   const { profile } = useAuth();
@@ -687,6 +688,7 @@ export default function AdminDashboard() {
 function ImageUpload({ value, onChange, folder, compact = false }: { value: string, onChange: (url: string) => void, folder: string, compact?: boolean }) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const { showToast } = useUI();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -694,13 +696,13 @@ function ImageUpload({ value, onChange, folder, compact = false }: { value: stri
 
     // Validate type
     if (!file.type.startsWith('image/')) {
-      alert('Tolong unggah file gambar yang valid (JPG, PNG, etc).');
+      showToast('Tolong unggah file gambar yang valid (JPG, PNG, etc).', 'error');
       return;
     }
 
     // Validate size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('Ukuran gambar maksimal adalah 5MB.');
+      showToast('Ukuran gambar maksimal adalah 5MB.', 'error');
       return;
     }
 
@@ -710,9 +712,10 @@ function ImageUpload({ value, onChange, folder, compact = false }: { value: stri
       const snapshot = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(snapshot.ref);
       onChange(url);
+      showToast('Gambar berhasil diunggah! ✨', 'success');
     } catch (error) {
       console.error("Upload error:", error);
-      alert('Gagal mengunggah gambar. Silakan coba lagi.');
+      showToast('Gagal mengunggah gambar. Silakan coba lagi.', 'error');
     } finally {
       setUploading(false);
     }

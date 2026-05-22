@@ -7,26 +7,20 @@ import "dotenv/config";
 
 import fs from "fs";
 
-// Generate or load VAPID keys for Web Push
-let vapidKeys: { publicKey: string; privateKey: string };
-const VAPID_KEYS_PATH = path.join(process.cwd(), 'vapid-keys.json');
-
-try {
-  if (fs.existsSync(VAPID_KEYS_PATH)) {
-    vapidKeys = JSON.parse(fs.readFileSync(VAPID_KEYS_PATH, 'utf-8'));
-  } else {
-    vapidKeys = webPush.generateVAPIDKeys();
-    fs.writeFileSync(VAPID_KEYS_PATH, JSON.stringify(vapidKeys));
-  }
-} catch (e) {
-  vapidKeys = webPush.generateVAPIDKeys();
-}
+// Permanent VAPID keys for Web Push
+const VAPID_KEYS = {
+  publicKey: "BJE6mt74G5b1DqLbb3rHc2yVFHWtIrxQK5CfKUpAJpZ26QgU-PdnSfS6suYSNBDJ8mlvtVBJSZ5wZ4f-JcK0pl8",
+  privateKey: "8giC_-g4keVSrTRDwMC_qur4d62KGK-IPQ5eoWsvLJg"
+};
 
 webPush.setVapidDetails(
   'mailto:febriandwiiiii@gmail.com',
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
+  VAPID_KEYS.publicKey,
+  VAPID_KEYS.privateKey
 );
+
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, setDoc, deleteDoc, getDocs, collection } from "firebase/firestore";
 
 async function startServer() {
   const app = express();
@@ -34,14 +28,39 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Capture public APP_URL dynamically from first client visits or env injection
+  let capturedAppUrl = process.env.APP_URL || "";
+
+  app.use((req, res, next) => {
+    if (!capturedAppUrl && req.headers.host) {
+      const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+      capturedAppUrl = `${protocol}://${req.headers.host}`;
+    }
+    next();
+  });
+
   // API routes
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok" });
   });
 
-  // Web Push API Routes
-  const SCHEDULED_PUSHES_FILE = path.join(process.cwd(), 'scheduled-pushes.json');
-  
+  // Initialize Firebase Client SDK in Server Side with Firestore DB
+  const firebaseConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
+  let firestoreDb: any = null;
+
+  if (fs.existsSync(firebaseConfigPath)) {
+    try {
+      const firebaseConfig = JSON.parse(fs.readFileSync(firebaseConfigPath, 'utf8'));
+      const firebaseApp = initializeApp(firebaseConfig);
+      firestoreDb = getFirestore(firebaseApp);
+      console.log("[Firebase] Successfully initialized Firestore inside server.ts");
+    } catch (error) {
+      console.error("[Firebase] Error initializing Firebase inside server.ts:", error);
+    }
+  } else {
+    console.warn("[Firebase] Firebase config file firebase-applet-config.json was not found!");
+  }
+
   interface PushTask {
     subscription: any;
     payload: any;
@@ -51,16 +70,35 @@ async function startServer() {
   let scheduledTasks: Record<string, PushTask> = {};
   const scheduledTimeouts: Record<string, NodeJS.Timeout> = {};
 
-  const saveScheduledTasks = () => {
+  // Save scheduled task to Firestore
+  const saveScheduledTaskToFirestore = async (timerId: string, task: PushTask) => {
+    if (!firestoreDb) return;
     try {
-      fs.writeFileSync(SCHEDULED_PUSHES_FILE, JSON.stringify(scheduledTasks));
-    } catch (e) {
-      console.error("Error saving scheduled pushes", e);
+      const docRef = doc(firestoreDb, "scheduled_pushes", timerId);
+      await setDoc(docRef, {
+        subscription: task.subscription,
+        payload: task.payload,
+        targetTime: task.targetTime
+      });
+      console.log(`[Firestore] Saved task ${timerId} to Firestore`);
+    } catch (err) {
+      console.error(`[Firestore] Failed to save task ${timerId} to Firestore`, err);
+    }
+  };
+
+  // Delete scheduled task from Firestore
+  const deleteScheduledTaskFromFirestore = async (timerId: string) => {
+    if (!firestoreDb) return;
+    try {
+      const docRef = doc(firestoreDb, "scheduled_pushes", timerId);
+      await deleteDoc(docRef);
+      console.log(`[Firestore] Deleted task ${timerId} from Firestore`);
+    } catch (err) {
+      console.error(`[Firestore] Failed to delete task ${timerId} from Firestore`, err);
     }
   };
 
   // Safe, atomic, and race-free notification dispatcher.
-  // It instantly cleans state BEFORE triggering the network call to totally prevent double delivery.
   const sendPushNotificationSafely = (timerId: string, task: PushTask) => {
     if (!scheduledTasks[timerId]) return; // Already sent/handled by another worker or tick
 
@@ -77,7 +115,7 @@ async function startServer() {
 
     // Delete tasks instantly to prevent any secondary ticks from seeing this task
     delete scheduledTasks[timerId];
-    saveScheduledTasks();
+    deleteScheduledTaskFromFirestore(timerId);
 
     // Trigger the real push notification through VAPID protocol
     webPush.sendNotification(subscription, JSON.stringify(payload))
@@ -89,38 +127,49 @@ async function startServer() {
       });
   };
 
-  const loadScheduledTasks = () => {
+  // Load scheduled tasks from Firestore at server startup
+  const loadScheduledTasksFromFirestore = async () => {
+    if (!firestoreDb) return;
     try {
-      if (fs.existsSync(SCHEDULED_PUSHES_FILE)) {
-        scheduledTasks = JSON.parse(fs.readFileSync(SCHEDULED_PUSHES_FILE, 'utf-8'));
-        const now = Date.now();
-        let changed = false;
-        
-        Object.entries(scheduledTasks).forEach(([timerId, task]) => {
-          const delay = task.targetTime - now;
+      console.log("[Firestore] Loading scheduled tasks from Firestore...");
+      const colRef = collection(firestoreDb, "scheduled_pushes");
+      const snapshot = await getDocs(colRef);
+      const now = Date.now();
+      let loadedCount = 0;
+
+      snapshot.forEach((docSnapshot) => {
+        const timerId = docSnapshot.id;
+        const data = docSnapshot.data() as PushTask;
+        if (data && data.targetTime) {
+          scheduledTasks[timerId] = {
+            subscription: data.subscription,
+            payload: data.payload,
+            targetTime: data.targetTime
+          };
+          loadedCount++;
+
+          // If already past due, dispatch immediately
+          const delay = data.targetTime - now;
           if (delay <= 0) {
-            // Already past due, send now
-            sendPushNotificationSafely(timerId, task);
-            changed = true;
+            sendPushNotificationSafely(timerId, data);
           } else {
-            // Schedule standard timeout
+            // Schedule a fast timeout
             scheduledTimeouts[timerId] = setTimeout(() => {
               if (scheduledTasks[timerId]) {
                 sendPushNotificationSafely(timerId, scheduledTasks[timerId]);
               }
             }, delay);
           }
-        });
-        if (changed) {
-          saveScheduledTasks();
         }
-      }
-    } catch (e) {
-      console.error("Error loading scheduled pushes", e);
+      });
+      console.log(`[Firestore] Loaded ${loadedCount} active tasks from Firestore`);
+    } catch (err) {
+      console.error("[Firestore] Error loading tasks from Firestore:", err);
     }
   };
 
-  loadScheduledTasks();
+  // Fire loading on server startup
+  loadScheduledTasksFromFirestore();
 
   // Active fallback scheduler loop: check every 5 seconds for past-due tasks.
   // This behaves as a robust safeguard if setTimeout is delayed, choked by serverless CPU limits,
@@ -138,13 +187,13 @@ async function startServer() {
   // while there are active scheduled timers running in scheduledTasks.
   setInterval(() => {
     const activeTasksCount = Object.keys(scheduledTasks).length;
-    if (activeTasksCount > 0) {
-      console.log(`[Keep-Alive] There are ${activeTasksCount} active timers. Pinging local server to avoid scale-down...`);
-      fetch("http://localhost:3000/api/health")
-        .then(() => console.log("[Keep-Alive] Local ping successful"))
-        .catch(err => console.warn("[Keep-Alive] Local ping warning:", err.message));
+    if (activeTasksCount > 0 && capturedAppUrl) {
+      console.log(`[Keep-Alive] There are ${activeTasksCount} active timers. Pinging external server ${capturedAppUrl} to avoid scale-down...`);
+      fetch(`${capturedAppUrl}/api/health`)
+        .then(() => console.log("[Keep-Alive] External ping successful"))
+        .catch(err => console.warn("[Keep-Alive] External ping warning:", err.message));
     }
-  }, 120000); // Ping every 2 minutes if timers are active
+  }, 90000); // Ping every 90 seconds if timers are active
 
   // Lazy cron / scheduler middleware on every API access.
   // Ensures any incoming request immediately forces a check and flushes due notifications.
@@ -159,7 +208,7 @@ async function startServer() {
   });
 
   app.get("/api/vapidPublicKey", (_req, res) => {
-    res.json({ publicKey: vapidKeys.publicKey });
+    res.json({ publicKey: VAPID_KEYS.publicKey });
   });
 
   app.post("/api/schedule-push", (req, res) => {
@@ -176,8 +225,9 @@ async function startServer() {
     }
 
     const targetTime = Date.now() + delayMs;
-    scheduledTasks[timerId] = { subscription, payload, targetTime };
-    saveScheduledTasks();
+    const task = { subscription, payload, targetTime };
+    scheduledTasks[timerId] = task;
+    saveScheduledTaskToFirestore(timerId, task);
 
     // Schedule the push notification
     scheduledTimeouts[timerId] = setTimeout(() => {
@@ -191,7 +241,6 @@ async function startServer() {
 
   app.post("/api/cancel-push", (req, res) => {
     const { timerId } = req.body;
-    let changed = false;
     
     if (timerId) {
       if (scheduledTimeouts[timerId]) {
@@ -200,10 +249,7 @@ async function startServer() {
       }
       if (scheduledTasks[timerId]) {
         delete scheduledTasks[timerId];
-        changed = true;
-      }
-      if (changed) {
-        saveScheduledTasks();
+        deleteScheduledTaskFromFirestore(timerId);
       }
     }
     res.json({ status: "cancelled" });

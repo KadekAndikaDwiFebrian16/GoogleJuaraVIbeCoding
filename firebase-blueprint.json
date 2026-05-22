@@ -136,9 +136,24 @@
       "properties": {
         "email": { "type": "string" }
       }
+    },
+    "ScheduledPush": {
+      "title": "Scheduled Push",
+      "description": "Information about a scheduled push notification for cooking timers",
+      "type": "object",
+      "properties": {
+        "subscription": { "type": "object" },
+        "payload": { "type": "object" },
+        "targetTime": { "type": "number" }
+      },
+      "required": ["subscription", "payload", "targetTime"]
     }
   },
   "firestore": {
+    "scheduled_pushes": {
+      "schema": "ScheduledPush",
+      "description": "Persisted cooking timer push notifications"
+    },
     "users": {
       "schema": "User",
       "description": "User profiles"
