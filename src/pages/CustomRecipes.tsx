@@ -79,7 +79,7 @@ export default function CustomRecipes() {
   if (loading) return <Loader />;
 
   return (
-    <div className="min-h-[calc(100vh-64px)] p-6 md:p-12 relative z-10 max-w-7xl mx-auto">
+    <div className="min-h-[calc(100vh-64px)] p-6 md:p-12 pb-28 md:pb-12 relative z-10 max-w-7xl mx-auto">
       <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="flex-1">
           <h1 className="text-3xl md:text-5xl font-black font-serif text-gray-900 tracking-tight flex items-center gap-4">

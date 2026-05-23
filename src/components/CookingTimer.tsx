@@ -542,19 +542,57 @@ export default function CookingTimer() {
   const isRecipePage = location.pathname.startsWith('/recipe') || location.pathname.startsWith('/custom-recipe');
   const isBeranda = !isRecipePage;
 
-  // Enforce screen boundaries to keep timer fully visible
-  const getConstrainedOffset = (x: number, y: number) => {
+  const getPopupHeight = () => {
+    let height = 240; // Base height for elements
+    if (isFinished) {
+      height += 24; // Extra text for Waktu Habis
+    }
+    if (showIOSWarning && !isFinished) {
+      height += 120; // Extra container for iOS warning
+    }
+    return height;
+  };
+
+  // Enforce screen boundaries to keep timer and its popup fully visible
+  const getConstrainedOffset = (x: number, y: number, forceOpen?: boolean) => {
     const isMd = window.matchMedia('(min-width: 768px)').matches;
     const originLeft = isMd ? 24 : 16;
-    const originBottom = isMd ? 104 : 96;
+    const originBottom = isMd ? 104 : 144;
     const size = 64; // Button is 64x64px (w-16 h-16)
     const margin = 8; // Distance to keep from screen edges
 
     const minX = -originLeft + margin;
     const maxX = window.innerWidth - originLeft - size - margin;
     
-    const minY = -(window.innerHeight - (originBottom + size) - margin);
-    const maxY = originBottom - margin;
+    let minY = -(window.innerHeight - (originBottom + size) - margin);
+    let maxY = originBottom - margin;
+
+    const activeOpen = forceOpen !== undefined ? forceOpen : isOpen;
+    if (activeOpen) {
+      const popupHeight = getPopupHeight();
+      const popupMargin = 16;
+      const screenSafetyMargin = 12;
+
+      // Calculate spaceAbove using the correct sign for y (which is negative when dragged UP)
+      const spaceAbove = window.innerHeight - originBottom - size + y;
+      const showBelow = spaceAbove < (popupHeight + popupMargin + screenSafetyMargin);
+
+      if (showBelow) {
+        // If popup is shown below the button, bottom of popup is:
+        // originBottom - y - popupMargin - popupHeight from screen bottom.
+        // We want: originBottom - y - popupMargin - popupHeight >= screenSafetyMargin
+        // => y <= originBottom - popupMargin - popupHeight - screenSafetyMargin
+        const maxSafetyY = originBottom - popupMargin - popupHeight - screenSafetyMargin;
+        maxY = Math.min(maxY, maxSafetyY);
+      } else {
+        // If popup is shown above the button, top of popup is:
+        // originBottom - y + size + popupMargin + popupHeight from screen bottom.
+        // We want: originBottom - y + size + popupMargin + popupHeight <= window.innerHeight - screenSafetyMargin
+        // => y >= -(window.innerHeight - originBottom - size - popupMargin - popupHeight - screenSafetyMargin)
+        const minSafetyY = -(window.innerHeight - originBottom - size - popupMargin - popupHeight - screenSafetyMargin);
+        minY = Math.max(minY, minSafetyY);
+      }
+    }
 
     return {
       x: Math.max(minX, Math.min(maxX, x)),
@@ -732,13 +770,39 @@ export default function CookingTimer() {
     };
   }, []);
 
+  // Force boundaries and popup adjustments on open
+  useEffect(() => {
+    if (isOpen) {
+      setOffset(prev => getConstrainedOffset(prev.x, prev.y, true));
+    }
+  }, [isOpen]);
+
   const shouldRender = isRecipePage || isActive || isFinished;
 
   if (!shouldRender) return null;
 
+  // Calculate dynamic left offset for popup to prevent clipping on left/right screen edges
+  const isMdLayout = window.matchMedia('(min-width: 768px)').matches;
+  const originLeft = isMdLayout ? 24 : 16;
+  const originBottom = isMdLayout ? 104 : 144;
+  const buttonSize = 64; // Button size (w-16 h-16)
+  const popupHeight = getPopupHeight();
+  const spaceAbove = window.innerHeight - originBottom - buttonSize + offset.y;
+  const showBelow = spaceAbove < (popupHeight + 16 + 12);
+
+  const btnLeftOnScreen = originLeft + offset.x;
+  const isSmWidth = window.matchMedia('(min-width: 640px)').matches;
+  const popupWidth = isSmWidth ? 256 : (window.innerWidth - 48);
+  const idealLeft = 32 - (popupWidth / 2);
+  const idealScreenLeft = btnLeftOnScreen + idealLeft;
+  const screenMargin = 12;
+  const maxScreenLeft = window.innerWidth - popupWidth - screenMargin;
+  const constrainedScreenLeft = Math.max(screenMargin, Math.min(maxScreenLeft, idealScreenLeft));
+  const relativeLeft = constrainedScreenLeft - btnLeftOnScreen;
+
   return (
     <div 
-      className="fixed bottom-24 md:bottom-[104px] left-4 md:left-6 z-[120]"
+      className="fixed bottom-36 md:bottom-[104px] left-4 md:left-6 z-[120]"
       style={{
         transform: `translate3d(${offset.x}px, ${offset.y}px, 0)`,
         touchAction: 'none'
@@ -747,10 +811,11 @@ export default function CookingTimer() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9, y: showBelow ? -20 : 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="absolute bottom-full left-0 mb-4 w-[calc(100vw-48px)] sm:w-64 bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl shadow-orange-950/10 p-6 border border-gray-100/80 overflow-hidden"
+            exit={{ opacity: 0, scale: 0.9, y: showBelow ? -20 : 20 }}
+            style={{ left: `${relativeLeft}px` }}
+            className={`absolute ${showBelow ? 'top-full mt-4' : 'bottom-full mb-4'} w-[calc(100vw-48px)] sm:w-64 bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl shadow-orange-950/10 p-6 border border-gray-100/80 overflow-hidden`}
           >
             {isFinished && (
               <motion.div 

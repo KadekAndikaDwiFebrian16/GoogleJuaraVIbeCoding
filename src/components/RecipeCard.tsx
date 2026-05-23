@@ -72,19 +72,55 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
           {/* Image Container */}
           <div className="h-32 md:h-52 w-full bg-gray-50 relative overflow-hidden shrink-0">
             {isNoImage ? (
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-100/45 to-orange-200/20 flex flex-col items-center justify-center p-4">
-                <motion.div
+              <div className="absolute inset-0 bg-gradient-to-br from-[#FFFDF9] via-[#FAF7F0] to-[#F1EAD7] flex flex-col items-center justify-center p-4 md:p-6 text-center select-none">
+                {/* Vintage decorative border */}
+                <div className="absolute inset-2 border border-orange-200/20 rounded-xl md:rounded-[1.4rem] pointer-events-none" />
+                
+                <motion.div 
                   initial={{ scale: 0.95, opacity: 0 }}
                   whileInView={{ scale: 1, opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5 }}
-                  className="flex flex-col items-center gap-1.5 text-center"
+                  className="flex flex-col items-center max-w-[140px] md:max-w-[180px] z-10"
                 >
-                  <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-orange-500 border border-orange-100/80 group-hover:scale-110 group-hover:text-orange-600 transition-all duration-300">
-                    <ChefHat size={18} className="stroke-[1.8]" />
+                  <div className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white shadow-md flex items-center justify-center text-orange-600 border border-orange-100/30 group-hover:scale-110 group-hover:text-orange-500 transition-all duration-500 mb-2 md:mb-3">
+                    <ChefHat size={16} className="stroke-[1.8] md:w-[18px] md:h-[18px]" />
                   </div>
-                  <span className="text-[9px] md:text-xs font-serif font-black text-orange-950 tracking-[0.15em] uppercase">No Picture Yet</span>
-                  <p className="text-[7px] md:text-[9px] text-orange-700/80 font-sans tracking-tight max-w-[130px] line-clamp-1 leading-none">Kelezatan rahasia sedang menanti!</p>
+                  
+                  <span className="text-[7px] md:text-[9px] font-black text-orange-950/60 tracking-[0.2em] uppercase font-sans mb-1 md:mb-1.5 block">
+                    DAPUR SEHAT
+                  </span>
+                  
+                  <div className="w-5 h-[1px] bg-orange-300/30 mb-2" />
+                  
+                  {recipe.ingredients && recipe.ingredients.filter(i => i && i.trim() !== '').length > 0 ? (
+                    <div className="space-y-1 w-full text-center">
+                      <div className="text-[8px] font-sans font-black uppercase tracking-[0.1em] text-orange-600/70 mb-1">
+                        Bahan Utama:
+                      </div>
+                      <div className="flex flex-wrap justify-center gap-1 max-h-[36px] overflow-hidden">
+                        {recipe.ingredients.filter(i => i && i.trim() !== '').slice(0, 2).map((ing, i) => (
+                          <span key={i} className="text-[9px] md:text-[10px] text-gray-700 font-bold truncate max-w-[80px] md:max-w-[100px] bg-white/40 border border-orange-100/10 px-1.5 py-0.5 rounded-lg italic">
+                            {ing}
+                          </span>
+                        ))}
+                      </div>
+                      {recipe.ingredients.filter(i => i && i.trim() !== '').length > 2 && (
+                        <span className="text-[7px] text-gray-400 font-bold uppercase tracking-wider block mt-1">
+                          + {recipe.ingredients.filter(i => i && i.trim() !== '').length - 2} bahan lainnya
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <p className="text-[8px] md:text-[10px] text-orange-900/60 font-serif italic leading-snug">
+                        "Kelezatan rahasia sedang menanti"
+                      </p>
+                      <span className="text-[6px] md:text-[7px] text-orange-400/40 font-black tracking-widest uppercase block mt-1.5">
+                        NO COVER PHOTO
+                      </span>
+                    </div>
+                  )}
                 </motion.div>
               </div>
             ) : (

@@ -50,7 +50,9 @@ service cloud.firestore {
         return data.title is string && data.title.size() <= 100 &&
                data.description is string && data.description.size() <= 1000 &&
                data.mealTime in ['pagi', 'siang', 'sore', 'malam'] &&
-               data.ingredients is list && data.instructions is list;
+               data.ingredients is list &&
+               (!('tools' in data) || data.tools is list) &&
+               data.instructions is list;
       }
 
       allow list: if true;

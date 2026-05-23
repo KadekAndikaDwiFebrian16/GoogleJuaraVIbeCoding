@@ -32,6 +32,7 @@ export interface Recipe {
   condition: string;
   nutrition: Nutrition;
   ingredients: string[];
+  tools?: string[];
   instructions: InstructionStep[];
   rating: number;
   reviewCount: number;

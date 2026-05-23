@@ -11,7 +11,7 @@ import 'swiper/css/pagination';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronLeft, ChevronRight, Clock, Users, Star, Salad, 
-  MessageCircle, Info, Timer, Trash2, ChefHat, ShoppingCart, Plus, Check, Loader2
+  MessageCircle, Info, Timer, Trash2, ChefHat, ShoppingCart, Plus, Check, Loader2, Wrench
 } from 'lucide-react';
 import CookingTimer from '../components/CookingTimer';
 import { useAuth } from '../context/AuthContext';
@@ -254,24 +254,8 @@ export default function RecipeDetail() {
   return (
     <div className="bg-[#FAFAF8] min-h-screen pb-20 relative">
       {/* Hero Section */}
-      <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
-        {isNoImage ? (
-          <div className="w-full h-full bg-gradient-to-br from-[#FAFAF8] via-[#E8E8D5] to-[#D9D9C3] flex flex-col items-center justify-center p-6 relative">
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-40" />
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1 }}
-              className="flex flex-col items-center gap-3 text-center max-w-sm relative z-10"
-            >
-              <div className="w-16 h-16 rounded-full bg-white/90 shadow-md flex items-center justify-center text-orange-600 border border-orange-105">
-                <ChefHat size={32} className="stroke-[1.5]" />
-              </div>
-              <h3 className="font-serif font-bold text-gray-800 text-lg tracking-wider uppercase">No Cover Picture</h3>
-              <p className="text-xs text-gray-500 leading-relaxed max-w-xs font-sans tracking-tight">Setiap suapan kaya akan cerita. Coba kreasikan langkah-langkah di bawah untuk menghidupkan hidangan ini!</p>
-            </motion.div>
-          </div>
-        ) : (
+      <div className={`relative overflow-hidden ${isNoImage ? 'h-[120px] md:h-[160px] bg-gradient-to-br from-[#FAFAF8] via-[#F4F4EB] to-[#E8E8D5]' : 'h-[50vh] md:h-[60vh]'}`}>
+        {!isNoImage && (
           <motion.img 
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
@@ -283,9 +267,10 @@ export default function RecipeDetail() {
         )}
         <div className="absolute inset-0 bg-black/10 mix-blend-multiply pointer-events-none" />
         
-        {!isNoImage && recipe.imageCredit && (
-          <div className="absolute bottom-28 right-6 bg-black/45 backdrop-blur-sm text-white text-[10px] font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full border border-white/10 select-none z-10 font-sans shadow-sm">
-            📸 foto: {recipe.imageCredit}
+        {recipe.imageCredit && (
+          <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md text-gray-950 text-[10px] font-bold tracking-widest uppercase px-4 py-2.5 rounded-2xl border border-gray-100/80 shadow-sm hover:bg-white transition-all z-10 font-sans flex items-center gap-1.5 select-none animate-in fade-in duration-300">
+            <span className="text-orange-650">📸</span>
+            <span>FOTO: {recipe.imageCredit}</span>
           </div>
         )}
         
@@ -297,7 +282,7 @@ export default function RecipeDetail() {
         </Link>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 md:px-8 -mt-24 relative z-10">
+      <div className={`max-w-6xl mx-auto px-4 md:px-8 relative z-10 ${isNoImage ? '-mt-10 md:-mt-14' : '-mt-24'}`}>
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -506,6 +491,33 @@ export default function RecipeDetail() {
                   </div>
                 </div>
               </div>
+
+              {recipe.tools && recipe.tools.length > 0 && (
+                <div className="mt-8 bg-orange-50/20 p-6 md:p-8 rounded-3xl border border-orange-100/30 shadow-[0_4px_20px_-4px_rgba(234,88,12,0.03)] animate-in fade-in duration-300">
+                  <div className="flex items-start gap-4 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-orange-600/10 text-orange-600 flex items-center justify-center shrink-0">
+                      <Wrench size={18} className="stroke-[2.2]" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-serif font-black tracking-wider text-gray-900 uppercase">Alat Memasak Yang Diperlukan</h4>
+                      <p className="text-[11px] text-gray-500 font-medium leading-relaxed mt-1">Siapkan peralatan utama ini terlebih dahulu untuk mempermudah langkah pengerjaan di bawah.</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-6">
+                    {recipe.tools.map((tool, idx) => (
+                      <motion.div 
+                        key={idx} 
+                        whileHover={{ x: 4 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        className="flex items-center gap-2.5 group cursor-default"
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0 transition-transform duration-200 group-hover:scale-125" />
+                        <span className="text-sm font-bold text-gray-700 uppercase tracking-tight group-hover:text-gray-900 transition-colors duration-200">{tool}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
 
             </div>

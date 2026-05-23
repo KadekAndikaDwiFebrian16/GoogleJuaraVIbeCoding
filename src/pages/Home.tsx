@@ -149,7 +149,7 @@ export default function Home() {
         whileHover={{ scale: 1.05, x: 5 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsFilterOpen(true)}
-        className="fixed bottom-6 left-4 md:left-6 z-[100] bg-orange-600 text-white px-4 md:px-6 h-12 md:h-16 rounded-full md:rounded-[2rem] shadow-lg shadow-orange-200/50 flex items-center gap-2 md:gap-3 border-4 border-white transition-all group"
+        className="fixed bottom-24 md:bottom-6 left-4 md:left-6 z-[100] bg-orange-600 text-white px-4 md:px-6 h-12 md:h-16 rounded-full md:rounded-[2rem] shadow-lg shadow-orange-200/50 flex items-center gap-2 md:gap-3 border-4 border-white transition-all group"
       >
         <Filter size={18} className="md:size-[20px] group-hover:rotate-12 transition-transform" />
         <span className="font-black uppercase tracking-widest text-[10px] md:text-sm">Filter</span>
@@ -168,7 +168,7 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-[#FAFAF8]/98 md:bg-[#FAFAF8]/80 md:backdrop-blur-2xl cursor-pointer"
+              className="absolute inset-0 bg-black/50 backdrop-blur-md cursor-pointer"
               onClick={() => setIsFilterOpen(false)}
             />
             
@@ -177,7 +177,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: "20%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
-              className="relative w-full max-w-4xl max-h-[92vh] md:max-h-[85vh] bg-white rounded-t-[2.5rem] md:rounded-[4rem] shadow-xl md:shadow-2xl p-6 md:p-14 flex flex-col gap-6 md:gap-12 overflow-hidden mt-auto md:mt-0 will-change-transform"
+              className="relative w-full max-w-4xl max-h-[90vh] md:max-h-[85vh] bg-white rounded-[2.5rem] md:rounded-[4rem] shadow-2xl p-6 md:p-14 flex flex-col gap-6 md:gap-12 overflow-hidden will-change-transform"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 md:gap-5">
@@ -346,46 +346,6 @@ export default function Home() {
                 className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-orange-100 focus:border-orange-200 outline-none text-sm transition-all duration-300"
               />
             </div>
-            
-            <motion.div 
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full md:w-auto shrink-0 relative overflow-hidden rounded-2xl"
-            >
-              <motion.div
-                animate={{ backgroundPosition: ['0% 0%', '100% 100%'] }}
-                transition={{ duration: 3, repeat: Infinity, repeatType: "mirror" }}
-                className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-600 bg-[length:200%_200%] opacity-20"
-              />
-              <Link 
-                to="/shopping-list"
-                className="relative flex items-center justify-center gap-3 w-full md:w-auto px-6 py-3 bg-emerald-600/90 hover:bg-emerald-600 text-white border border-emerald-500/50 rounded-2xl shadow-lg shadow-emerald-200/50 transition-all font-bold group backdrop-blur-sm"
-              >
-                <div className="relative">
-                  <div className="absolute inset-0 bg-white/30 rounded-full blur-md group-hover:blur-lg transition-all" />
-                  <span className="text-xl relative z-10 block group-hover:-rotate-12 transition-transform">🛒</span>
-                </div>
-                <span className="tracking-wide">List Belanja Menu Sehat</span>
-                <Sparkles size={16} className="absolute top-1 right-2 text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </Link>
-            </motion.div>
-
-            <motion.div 
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full md:w-auto shrink-0 relative overflow-hidden rounded-2xl"
-            >
-              <Link 
-                to="/custom-recipes"
-                className="relative flex items-center justify-center gap-3 w-full md:w-auto px-6 py-3 bg-indigo-600/90 hover:bg-indigo-600 text-white border border-indigo-500/50 rounded-2xl shadow-lg shadow-indigo-200/50 transition-all font-bold group backdrop-blur-sm"
-              >
-                <div className="relative">
-                  <div className="absolute inset-0 bg-white/30 rounded-full blur-md group-hover:blur-lg transition-all" />
-                  <span className="text-xl relative z-10 block group-hover:scale-110 transition-transform">📝</span>
-                </div>
-                <span className="tracking-wide">Resep Custom</span>
-              </Link>
-            </motion.div>
           </div>
         </motion.header>
 

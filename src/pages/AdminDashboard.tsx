@@ -4,7 +4,7 @@ import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, deleteDoc
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Recipe, Suggestion, InstructionStep, UserProfile } from '../types';
-import { Plus, Trash2, MessageSquare, Save, X, Loader2, Salad, Upload, Image as ImageIcon, Users, Shield, ShieldAlert, Search } from 'lucide-react';
+import { Plus, Trash2, MessageSquare, Save, X, Loader2, Salad, Upload, Image as ImageIcon, Users, Shield, ShieldAlert, Search, ChefHat } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatDate } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
@@ -29,6 +29,7 @@ export default function AdminDashboard() {
   const [prepTime, setPrepTime] = useState('');
   const [servings, setServings] = useState('');
   const [ingredients, setIngredients] = useState<string[]>(['']);
+  const [tools, setTools] = useState<string[]>(['']);
   const [nutrition, setNutrition] = useState({ calories: '', protein: '', fat: '', carbs: '' });
   const [instructions, setInstructions] = useState<InstructionStep[]>([{ step: 1, text: '', image: '' }]);
   const [submitting, setSubmitting] = useState(false);
@@ -103,6 +104,14 @@ export default function AdminDashboard() {
   };
   const handleRemoveIngredient = (idx: number) => setIngredients(ingredients.filter((_, i) => i !== idx));
 
+  const handleAddTool = () => setTools([...tools, '']);
+  const handleToolChange = (idx: number, val: string) => {
+    const newTools = [...tools];
+    newTools[idx] = val;
+    setTools(newTools);
+  };
+  const handleRemoveTool = (idx: number) => setTools(tools.filter((_, i) => i !== idx));
+
   const handleAddInstruction = () => setInstructions([...instructions, { step: instructions.length + 1, text: '', image: '' }]);
   const handleInstructionChange = (idx: number, field: keyof InstructionStep, val: any) => {
     const newInst = [...instructions];
@@ -119,6 +128,7 @@ export default function AdminDashboard() {
     setSubmitting(true);
     try {
       const filteredIngredients = ingredients.filter(i => i.trim() !== '');
+      const filteredTools = tools.filter(t => t.trim() !== '');
       const filteredInstructions = instructions.filter(i => i.text.trim() !== '');
       
       const recipeData = {
@@ -130,6 +140,7 @@ export default function AdminDashboard() {
         condition,
         nutrition,
         ingredients: filteredIngredients,
+        tools: filteredTools,
         instructions: filteredInstructions,
         prepTime: prepTime || '30 Mnt',
         servings: servings || '2-4 Porsi',
@@ -168,6 +179,7 @@ export default function AdminDashboard() {
     setCoverImage('');
     setImageCredit('');
     setIngredients(['']);
+    setTools(['']);
     setInstructions([{ step: 1, text: '', image: '' }]);
     setCondition('');
     setNutrition({ calories: '', protein: '', fat: '', carbs: '' });
@@ -188,6 +200,7 @@ export default function AdminDashboard() {
     setMealTime(recipe.mealTime as any);
     setCondition(recipe.condition || '');
     setIngredients(recipe.ingredients.length > 0 ? recipe.ingredients : ['']);
+    setTools(recipe.tools && recipe.tools.length > 0 ? recipe.tools : ['']);
     setInstructions(recipe.instructions.length > 0 ? recipe.instructions : [{ step: 1, text: '', image: '' }]);
     setNutrition(recipe.nutrition || { calories: '', protein: '', fat: '', carbs: '' });
     setPrepTime(recipe.prepTime || '');
@@ -408,6 +421,37 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              {/* Cooking Tools */}
+              <div className="pt-10 border-t border-gray-50">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Alat-alat Memasak</h3>
+                  <motion.button 
+                    type="button" 
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={handleAddTool} 
+                    className="text-orange-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-all"
+                  >
+                    <Plus size={14}/> Tambah
+                  </motion.button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {tools.map((tl, i) => (
+                    <div key={i} className="flex gap-2 group">
+                      <input 
+                        value={tl} 
+                        onChange={(e) => handleToolChange(i, e.target.value)} 
+                        placeholder={`Alat ${i+1}`}
+                        className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-orange-100"
+                      />
+                      {tools.length > 1 && (
+                        <button type="button" onClick={() => handleRemoveTool(i)} className="p-2 text-gray-300 hover:text-red-500 transition-colors"><X size={18}/></button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Instructions */}
               <div className="pt-10 border-t border-gray-50">
                 <div className="flex justify-between items-center mb-6">
@@ -519,10 +563,19 @@ export default function AdminDashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {recipes.map((recipe) => (
-              <div key={recipe.id} className="bg-white p-4 rounded-2xl border border-gray-100 flex gap-4 items-center shadow-sm hover:border-orange-200 transition-colors group">
-                <img src={recipe.coverImage} className="w-20 h-20 rounded-xl object-cover grayscale brightness-95 group-hover:grayscale-0 transition-all duration-500" />
-                <div className="flex-1 min-w-0">
+            {recipes.map((recipe) => {
+              const isNoImage = !recipe.coverImage || recipe.coverImage === '' || recipe.coverImage.includes('unsplash.com/photo-1546069901-ba9599a7e63c');
+              return (
+                <div key={recipe.id} className="bg-white p-4 rounded-2xl border border-gray-100 flex gap-4 items-center shadow-sm hover:border-orange-200 transition-colors group">
+                  {isNoImage ? (
+                    <div className="w-20 h-20 rounded-xl bg-orange-50/60 flex flex-col items-center justify-center border border-orange-100/40 text-orange-600 group-hover:bg-orange-100/30 transition-all duration-300 shrink-0 select-none">
+                      <ChefHat size={18} className="stroke-[1.8] mb-1 text-orange-500 animate-pulse" />
+                      <span className="text-[7px] font-black tracking-widest text-orange-900/60 uppercase">NO PHOTO</span>
+                    </div>
+                  ) : (
+                    <img src={recipe.coverImage} className="w-20 h-20 rounded-xl object-cover grayscale brightness-95 group-hover:grayscale-0 transition-all duration-500 shrink-0" referrerPolicy="no-referrer" />
+                  )}
+                  <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-gray-900 mb-1 truncate text-sm">{recipe.title}</h4>
                   <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-3">{recipe.mealTime}</p>
                   <div className="flex gap-4">
@@ -548,7 +601,8 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </motion.div>
         )}
 
@@ -761,6 +815,16 @@ function ImageUpload({ value, onChange, folder, compact = false }: { value: stri
         onChange={handleFileChange} 
         accept="image/*"
       />
+
+      <div className="flex items-center gap-2">
+        <input 
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Atau tempel URL Gambar langsung..."
+          className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-orange-100 outline-none text-gray-700 transition-all placeholder:text-gray-300"
+        />
+      </div>
 
       {value && (
         <div className="flex items-center gap-3 bg-green-50 p-3 rounded-xl border border-green-100">

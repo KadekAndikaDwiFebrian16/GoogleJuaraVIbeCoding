@@ -101,7 +101,7 @@ export default function ShoppingList() {
       <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-emerald-100 rounded-full blur-3xl opacity-35 -translate-y-1/2 translate-x-1/3 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-teal-100 rounded-full blur-3xl opacity-35 translate-y-1/3 -translate-x-1/4 pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-10 relative z-10">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 py-10 pb-28 relative z-10">
         <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="flex-1">
             <Link to="/" className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100/80 px-4 py-2 rounded-xl transition-all mb-4">

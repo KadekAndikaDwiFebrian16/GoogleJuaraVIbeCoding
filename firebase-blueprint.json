@@ -39,6 +39,10 @@
           "type": "array",
           "items": { "type": "string" }
         },
+        "tools": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
         "instructions": {
           "type": "array",
           "items": {

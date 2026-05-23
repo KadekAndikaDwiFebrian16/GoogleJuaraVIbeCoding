@@ -14,6 +14,7 @@ import MealPlannerChat from './components/MealPlannerChat';
 import Navbar from './components/Navbar';
 import Loader from './components/Loader';
 import CookingTimer from './components/CookingTimer';
+import MobileBottomNav from './components/MobileBottomNav';
 
 import ShoppingList from './pages/ShoppingList';
 import ShoppingListDetail from './pages/ShoppingListDetail';
@@ -202,7 +203,7 @@ function AppContent() {
         </div>
 
         {user && <Navbar />}
-        <main className="relative z-10">
+        <main className="relative">
           <AnimatedRoutes />
         </main>
         {user && (
@@ -252,6 +253,7 @@ function AppContent() {
               }}
             />
             <CookingTimer />
+            <MobileBottomNav />
           </>
         )}
       </div>
