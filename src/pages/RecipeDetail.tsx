@@ -207,7 +207,33 @@ export default function RecipeDetail() {
     // Simpler check or just execute if confirm is problematic in this env
     try {
       await deleteDoc(doc(db, 'recipes', id, 'comments', commentId));
-      setComments(prev => prev.filter(c => c.id !== commentId));
+      
+      const updatedComments = comments.filter(c => c.id !== commentId);
+      setComments(updatedComments);
+
+      // Recalculate average rating of the remaining comments
+      const newReviewCount = updatedComments.length;
+      const newRating = newReviewCount > 0
+        ? updatedComments.reduce((acc, c) => acc + c.rating, 0) / newReviewCount
+        : 5.0; // Default back to 5.0 if no reviews left
+        
+      try {
+        await updateDoc(doc(db, 'recipes', id), {
+          rating: Number(newRating.toFixed(1)),
+          reviewCount: newReviewCount
+        });
+
+        // Update local recipe state
+        setRecipe(prev => prev ? {
+          ...prev,
+          rating: Number(newRating.toFixed(1)),
+          reviewCount: newReviewCount
+        } : null);
+      } catch (updateError) {
+        console.warn("Failed to update recipe totals, but comment was deleted:", updateError);
+      }
+
+      showToast('Ulasan berhasil dihapus. ✨', 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `recipes/${id}/comments/${commentId}`);
     }
