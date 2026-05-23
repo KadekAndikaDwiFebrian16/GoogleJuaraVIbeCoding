@@ -33,7 +33,9 @@ export default function AIAssistantHub({
   };
 
   return (
-    <div className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-[120] flex flex-col items-end">
+    <div className={`fixed bottom-24 md:bottom-6 right-4 md:right-6 z-[120] flex flex-col items-end transition-all duration-300 ${
+      openAssistant ? 'opacity-0 pointer-events-none md:opacity-100 md:pointer-events-auto' : ''
+    }`}>
       <AnimatePresence>
         {isMenuOpen && !openAssistant && (
           <motion.div 
