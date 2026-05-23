@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, getDoc, collection, query, getDocs, addDoc, serverTimestamp, orderBy, updateDoc, increment, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, getDocs, addDoc, serverTimestamp, orderBy, updateDoc, increment, deleteDoc, where } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Recipe, Comment } from '../types';
+import { Recipe, Comment, ShoppingList as IShoppingList, ShoppingItem } from '../types';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -11,7 +11,7 @@ import 'swiper/css/pagination';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronLeft, ChevronRight, Clock, Users, Star, Salad, 
-  MessageCircle, Info, Timer, Trash2, ChefHat
+  MessageCircle, Info, Timer, Trash2, ChefHat, ShoppingCart, Plus, Check, Loader2
 } from 'lucide-react';
 import CookingTimer from '../components/CookingTimer';
 import { useAuth } from '../context/AuthContext';
@@ -20,7 +20,7 @@ import { formatDate } from '../lib/utils';
 
 export default function RecipeDetail() {
   const { id } = useParams<{ id: string }>();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const { showToast } = useUI();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -29,6 +29,95 @@ export default function RecipeDetail() {
   const [rating, setRating] = useState(5);
   const [submitting, setSubmitting] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
+
+  // States for Healthy Menu Shopping List integration
+  const [userLists, setUserLists] = useState<IShoppingList[]>([]);
+  const [fetchingLists, setFetchingLists] = useState(false);
+  const [showListModal, setShowListModal] = useState(false);
+  const [selectedListId, setSelectedListId] = useState<string>('new');
+  const [newListName, setNewListName] = useState('');
+  const [addingToShoppingList, setAddingToShoppingList] = useState(false);
+
+  useEffect(() => {
+    if (showListModal && user) {
+      fetchUserLists();
+    }
+  }, [showListModal, user]);
+
+  const fetchUserLists = async () => {
+    setFetchingLists(true);
+    try {
+      const q = query(
+        collection(db, 'shoppingLists'),
+        where('userId', '==', user.uid)
+      );
+      const querySnapshot = await getDocs(q);
+      const lists: any[] = [];
+      querySnapshot.forEach((doc) => {
+        lists.push({ id: doc.id, ...doc.data() });
+      });
+      lists.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      setUserLists(lists);
+      if (lists.length > 0) {
+        setSelectedListId(lists[0].id);
+      } else {
+        setSelectedListId('new');
+      }
+    } catch (error) {
+      console.error("Error fetching user lists:", error);
+    } finally {
+      setFetchingLists(false);
+    }
+  };
+
+  const handleAddToShoppingList = async () => {
+    if (!user || !recipe) return;
+
+    setAddingToShoppingList(true);
+    try {
+      const now = new Date().toISOString();
+      const newItems: ShoppingItem[] = recipe.ingredients.map(ing => ({
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 5) + '_' + Math.random().toString(36).substr(2, 5),
+        name: ing.trim(),
+        checked: false
+      }));
+
+      let targetListId = selectedListId;
+      let finalTitle = '';
+
+      if (selectedListId === 'new') {
+        const titleText = newListName.trim() || `Bahan ${recipe.title}`;
+        finalTitle = titleText;
+        const newDocRef = await addDoc(collection(db, 'shoppingLists'), {
+          userId: user.uid,
+          title: titleText,
+          items: newItems,
+          createdAt: now,
+          updatedAt: now
+        });
+        targetListId = newDocRef.id;
+      } else {
+        const existingList = userLists.find(l => l.id === selectedListId);
+        if (existingList) {
+          finalTitle = existingList.title;
+          const mergedItems = [...existingList.items, ...newItems];
+          const docRef = doc(db, 'shoppingLists', selectedListId);
+          await updateDoc(docRef, {
+            items: mergedItems,
+            updatedAt: now
+          });
+        }
+      }
+
+      showToast(`Berhasil menambahkan ${recipe.ingredients.length} bahan ke '${finalTitle}'! 🛒`, 'success');
+      setShowListModal(false);
+    } catch (error) {
+      console.error("Error adding to shopping list:", error);
+      showToast('Gagal menambahkan bahan ke daftar belanja.', 'error');
+    } finally {
+      setAddingToShoppingList(false);
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -261,6 +350,23 @@ export default function RecipeDetail() {
                     </motion.li>
                   ))}
                 </ul>
+
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    if (!user) {
+                      showToast('Silakan login terlebih dahulu untuk mengelola daftar belanja sehat Anda.', 'info');
+                      return;
+                    }
+                    setNewListName(`Belanja: ${recipe.title}`);
+                    setShowListModal(true);
+                  }}
+                  className="w-full mt-8 bg-emerald-600 hover:bg-emerald-700 text-white py-4 px-5 rounded-2xl font-bold text-[10px] sm:text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-md shadow-emerald-100 hover:shadow-xl hover:shadow-emerald-200/40 transition-all duration-300"
+                >
+                  <ShoppingCart size={15} />
+                  <span>Masukkan List Belanja</span>
+                </motion.button>
               </div>
             </div>
 
@@ -486,6 +592,160 @@ export default function RecipeDetail() {
             </div>
         </div>
       </div>
+
+      {/* Shopping List Integration Modal */}
+      <AnimatePresence>
+        {showListModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl border border-gray-100 relative overflow-hidden"
+            >
+              <div className="flex items-center gap-3.5 mb-2">
+                <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                  <ShoppingCart size={20} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black font-serif text-gray-900 leading-tight">Daftar Belanja Sehat</h3>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Masukkan Bahan Ke Daftar Belanja</p>
+                </div>
+              </div>
+
+              <p className="text-gray-500 text-xs leading-relaxed mb-6">
+                Masukkan bahan makanan dari <span className="font-bold text-gray-800">"{recipe.title}"</span> ke dalam list belanja sehat Anda.
+              </p>
+
+              {fetchingLists ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-3">
+                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>
+                    <Loader2 size={24} className="text-emerald-650 animate-spin" />
+                  </motion.div>
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-widest animate-pulse">Memuat daftar belanja...</span>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Select Destination */}
+                  <div className="space-y-3">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pilih Daftar Belanja</label>
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      {userLists.map((list) => (
+                        <label
+                          key={list.id}
+                          className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                            selectedListId === list.id
+                              ? 'border-emerald-500 bg-emerald-50/40 text-emerald-990 shadow-sm'
+                              : 'border-gray-50 hover:border-gray-200 text-gray-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="radio"
+                              name="shoppingListSelect"
+                              checked={selectedListId === list.id}
+                              onChange={() => setSelectedListId(list.id)}
+                              className="accent-emerald-600 w-4 h-4 cursor-pointer"
+                            />
+                            <div className="text-left">
+                              <span className="text-sm font-bold block leading-tight text-gray-800">{list.title}</span>
+                              <span className="text-[9px] font-bold text-gray-400 uppercase">{list.items.length} bahan saat ini</span>
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+
+                      {/* Option for New List */}
+                      <label
+                        className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                          selectedListId === 'new'
+                            ? 'border-emerald-500 bg-emerald-50/40 text-emerald-990 shadow-sm'
+                            : 'border-gray-50 hover:border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 w-full">
+                          <input
+                            type="radio"
+                            name="shoppingListSelect"
+                            checked={selectedListId === 'new'}
+                            onChange={() => setSelectedListId('new')}
+                            className="accent-emerald-600 w-4 h-4 cursor-pointer"
+                          />
+                          <div className="text-left flex-1">
+                            <span className="text-sm font-bold block leading-tight text-gray-900 flex items-center gap-1.5">
+                              <Plus size={14} className="text-emerald-600" strokeWidth={3} />
+                              Buat List Belanja Baru
+                            </span>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Input details for New List if selected */}
+                  <AnimatePresence>
+                    {selectedListId === 'new' && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden space-y-2 text-left"
+                      >
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Nama Daftar Belanja Baru</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Misal: Bahan Salmon Teriyaki Sehat"
+                          value={newListName}
+                          onChange={(e) => setNewListName(e.target.value)}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 text-sm text-gray-850 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 focus:bg-white outline-none transition-all placeholder:text-gray-400 font-medium"
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Submit state */}
+                  <div className="flex gap-4 pt-2">
+                    <button
+                      type="button"
+                      disabled={addingToShoppingList}
+                      onClick={() => {
+                        setShowListModal(false);
+                      }}
+                      className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl transition-all font-sans text-xs uppercase tracking-widest disabled:opacity-50"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="button"
+                      disabled={addingToShoppingList || (selectedListId === 'new' && !newListName.trim())}
+                      onClick={handleAddToShoppingList}
+                      className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-100 font-sans text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+                    >
+                      {addingToShoppingList ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" />
+                          <span>Menyimpan...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check size={14} strokeWidth={3} />
+                          <span>Tambahkan</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
