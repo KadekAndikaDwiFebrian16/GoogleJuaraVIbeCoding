@@ -255,12 +255,13 @@ export default function AdminDashboard() {
       <AnimatePresence>
         {showNotification && (
           <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.8 }}
+            initial={{ opacity: 0, y: -40, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-            className="fixed bottom-10 right-4 md:right-10 z-[100] pointer-events-none"
+            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 450, damping: 28 }}
+            className="fixed top-4 md:top-6 left-0 right-0 z-[100000] flex justify-center pointer-events-none px-4"
           >
-            <div className="bg-white border border-gray-100 md:bg-white/80 md:backdrop-blur-xl md:border-white/40 shadow-xl shadow-gray-200/30 p-5 rounded-[2rem] flex items-center gap-4 min-w-[300px] overflow-hidden relative group">
+            <div className="pointer-events-auto bg-white border border-gray-100 md:bg-white/80 md:backdrop-blur-xl md:border-white/40 shadow-xl shadow-gray-200/30 p-5 rounded-[2rem] flex items-center gap-4 min-w-[300px] max-w-[95vw] w-[380px] overflow-hidden relative group">
               <div className="absolute top-0 left-0 w-full h-[2px] bg-orange-100/30 overflow-hidden">
                 <motion.div 
                   initial={{ x: '-100%' }}

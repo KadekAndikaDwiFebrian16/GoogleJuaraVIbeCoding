@@ -12,7 +12,18 @@ interface RecipeSlideGroupProps {
 export default function RecipeSlideGroup({ recipes, title }: RecipeSlideGroupProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const recipesPerPage = 6;
+  const [isMobile, setIsMobile] = useState(false);
   
+  // Handle mobile screen size detection for exact pixel calculations
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Reset currentPage when recipes change (like changing categories)
   useEffect(() => {
     setCurrentPage(1);
@@ -20,6 +31,18 @@ export default function RecipeSlideGroup({ recipes, title }: RecipeSlideGroupPro
 
   const totalPages = Math.ceil(recipes.length / recipesPerPage);
   const currentRecipes = recipes.slice((currentPage - 1) * recipesPerPage, currentPage * recipesPerPage);
+
+  const maxVisiblePages = 5;
+  let startPage = 1;
+  if (totalPages > maxVisiblePages) {
+    if (currentPage <= 3) {
+      startPage = 1;
+    } else if (currentPage >= totalPages - 2) {
+      startPage = totalPages - maxVisiblePages + 1;
+    } else {
+      startPage = currentPage - 2;
+    }
+  }
 
   return (
     <div id="jelajahi-menu" className="w-full py-8 md:py-16 flex flex-col">
@@ -51,35 +74,42 @@ export default function RecipeSlideGroup({ recipes, title }: RecipeSlideGroupPro
       </div>
 
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-auto">
+        <div className="flex justify-center items-center gap-1.5 md:gap-2 mt-auto px-4 max-w-full">
           <button 
             onClick={() => {
               setCurrentPage(p => Math.max(1, p - 1));
               window.scrollTo({ top: document.getElementById('jelajahi-menu')?.offsetTop || 500, behavior: 'smooth' });
             }}
             disabled={currentPage === 1}
-            className="w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold disabled:opacity-30 border border-gray-200 hover:bg-gray-50 transition-colors text-gray-700"
+            className="w-9 h-9 md:w-10 md:h-10 flex-shrink-0 flex items-center justify-center rounded-xl text-xs md:text-sm font-bold disabled:opacity-30 border border-gray-200 bg-white hover:bg-gray-50 transition-colors text-gray-700 z-10 shadow-sm"
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={18} className="md:size-[20px]" />
           </button>
           
-          <div className="flex gap-2">
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  setCurrentPage(i + 1);
-                  window.scrollTo({ top: document.getElementById('jelajahi-menu')?.offsetTop || 500, behavior: 'smooth' });
-                }}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all duration-300 ${
-                  currentPage === i + 1 
-                    ? 'bg-orange-600 text-white shadow-lg shadow-orange-200/50 scale-110' 
-                    : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50 hover:border-gray-300'
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
+          <div className={`overflow-hidden flex-shrink-0 flex items-center justify-start py-2 px-1 md:px-2 ${totalPages > maxVisiblePages ? 'w-[212px] md:w-[248px]' : ''}`}>
+            <motion.div 
+              className="flex gap-1.5 md:gap-2"
+              animate={{ x: totalPages > maxVisiblePages ? -(startPage - 1) * (isMobile ? 42 : 48) : 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+            >
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  id={`page-btn-${i + 1}`}
+                  onClick={() => {
+                    setCurrentPage(i + 1);
+                    window.scrollTo({ top: document.getElementById('jelajahi-menu')?.offsetTop || 500, behavior: 'smooth' });
+                  }}
+                  className={`w-9 h-9 md:w-10 md:h-10 flex-shrink-0 flex items-center justify-center rounded-xl text-xs md:text-sm font-bold transition-all duration-300 ${
+                    currentPage === i + 1 
+                      ? 'bg-orange-600 text-white shadow-lg shadow-orange-200/50 scale-110' 
+                      : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50 hover:border-gray-300'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </motion.div>
           </div>
 
           <button 
@@ -88,9 +118,9 @@ export default function RecipeSlideGroup({ recipes, title }: RecipeSlideGroupPro
               window.scrollTo({ top: document.getElementById('jelajahi-menu')?.offsetTop || 500, behavior: 'smooth' });
             }}
             disabled={currentPage === totalPages}
-            className="w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold disabled:opacity-30 border border-gray-200 hover:bg-gray-50 transition-colors text-gray-700"
+            className="w-9 h-9 md:w-10 md:h-10 flex-shrink-0 flex items-center justify-center rounded-xl text-xs md:text-sm font-bold disabled:opacity-30 border border-gray-200 bg-white hover:bg-gray-50 transition-colors text-gray-700 z-10 shadow-sm"
           >
-            <ChevronRight size={20} />
+            <ChevronRight size={18} className="md:size-[20px]" />
           </button>
         </div>
       )}
