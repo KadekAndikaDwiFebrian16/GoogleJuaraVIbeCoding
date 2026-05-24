@@ -250,7 +250,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12 font-sans min-h-screen relative">
+    <div className="max-w-6xl mx-auto px-4 pt-12 pb-36 font-sans min-h-screen relative">
       {/* Toast Notification */}
       <AnimatePresence>
         {showNotification && (
@@ -542,7 +542,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="pt-10 flex justify-end">
+              <div className="pt-10 flex justify-center md:justify-end pb-12 md:pb-0">
                 <motion.button 
                   type="submit" 
                   disabled={submitting}

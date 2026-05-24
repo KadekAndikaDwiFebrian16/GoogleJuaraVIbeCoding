@@ -128,7 +128,7 @@ export default function CustomRecipeDetail() {
   if (loading) return <Loader />;
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-24">
+    <div className="min-h-screen bg-gray-50/50 pb-36">
       <div className="max-w-4xl mx-auto p-4 md:p-8">
         {/* Navigation */}
         <button 
