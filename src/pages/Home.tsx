@@ -201,7 +201,7 @@ export default function Home() {
                 <section>
                   <div className="flex items-center gap-3 mb-6 md:mb-8">
                     <div className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 opacity-80">Makan Kapan?</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 opacity-80">Makan/Minum Kapan?</h3>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                     {CATEGORIES.map((cat) => (
