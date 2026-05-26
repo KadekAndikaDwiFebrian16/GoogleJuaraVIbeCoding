@@ -21,11 +21,11 @@ export default function Loader() {
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute inset-0 bg-orange-100 rounded-full scale-150 blur-xl"
+          className="absolute inset-0 bg-amber-100 rounded-full scale-150 blur-xl"
         />
         
         {/* Main Icon container */}
-        <div className="relative w-24 h-24 bg-white rounded-full flex items-center justify-center border border-orange-50 shadow-sm shadow-orange-100/50">
+        <div className="relative w-24 h-24 bg-white rounded-full flex items-center justify-center border border-amber-50 shadow-sm shadow-amber-100/50">
           <motion.div
             animate={{ 
               rotate: [0, 10, -10, 0],
@@ -37,7 +37,7 @@ export default function Loader() {
               ease: "easeInOut"
             }}
           >
-            <Salad size={40} className="text-orange-600" />
+            <Salad size={40} className="text-amber-600" />
           </motion.div>
         </div>
 
@@ -62,7 +62,7 @@ export default function Loader() {
                   repeat: Infinity,
                   delay: i * 0.2
                 }}
-                className="w-1.5 h-1.5 bg-orange-600 rounded-full"
+                className="w-1.5 h-1.5 bg-amber-500 rounded-full"
               />
             ))}
           </div>
@@ -70,7 +70,7 @@ export default function Loader() {
       </motion.div>
 
       {/* Subtle background elements */}
-      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-orange-50/30 rounded-full blur-3xl" />
+      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-50/30 rounded-full blur-3xl" />
       <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-emerald-50/30 rounded-full blur-3xl" />
     </div>
   );

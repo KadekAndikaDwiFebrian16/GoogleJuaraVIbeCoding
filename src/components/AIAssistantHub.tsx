@@ -45,13 +45,13 @@ export default function AIAssistantHub({
             className="mb-4 z-50 flex flex-col gap-2 w-[280px] bg-white border border-emerald-100 rounded-[2.5rem] shadow-xl md:shadow-[0_15px_40px_rgba(0,0,0,0.08)] p-2 md:backdrop-blur-xl bg-white/95"
           >
             <motion.button
-              whileHover={{ x: 6, backgroundColor: "rgba(249, 115, 22, 0.05)" }}
+              whileHover={{ x: 6, backgroundColor: "rgba(245, 158, 11, 0.05)" }}
               whileTap={{ scale: 0.95 }}
               onClick={() => { setOpenAssistant('chef'); setIsMenuOpen(false); }}
               className="px-4 py-4 rounded-3xl text-left text-sm font-bold text-gray-900 transition-all flex items-center gap-4 group"
             >
-              <div className="w-11 h-11 rounded-2xl bg-orange-100 flex items-center justify-center shadow-inner md:group-hover:rotate-6 transition-transform">
-                <Salad size={22} className="text-orange-600" />
+              <div className="w-11 h-11 rounded-2xl bg-amber-100 flex items-center justify-center shadow-inner md:group-hover:rotate-6 transition-transform">
+                <Salad size={22} className="text-amber-600" />
               </div>
               <div className="flex flex-col">
                 <span className="font-black text-gray-900">Tanya Chef AI</span>

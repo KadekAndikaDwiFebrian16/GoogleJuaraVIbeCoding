@@ -44,7 +44,7 @@ export default function SuggestionForm() {
     <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 relative overflow-hidden group">
       <div className="flex flex-col md:flex-row gap-12 items-center relative z-10">
         <div className="flex-1">
-          <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-6">
+          <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-6">
              <UtensilsCrossed size={12} />
              <span>Ide Baru?</span>
           </div>
@@ -77,19 +77,19 @@ export default function SuggestionForm() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Judul Resep..."
-                className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-100 transition-all text-sm text-gray-700"
+                className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-amber-100 transition-all text-sm text-gray-700"
               />
               <textarea 
                 required
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Kenapa resep ini unik?"
-                className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-100 transition-all text-sm text-gray-700 min-h-[80px]"
+                className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-amber-100 transition-all text-sm text-gray-700 min-h-[80px]"
               />
               <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-orange-600 transition-all disabled:opacity-50 active:scale-95 text-xs uppercase tracking-widest"
+                className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-amber-500 transition-all disabled:opacity-50 active:scale-95 text-xs uppercase tracking-widest"
               >
                 {loading ? <Loader2 className="animate-spin" size={16} /> : <Send size={16}/>}
                 Kirim Saran Resep

@@ -49,10 +49,10 @@ export default function RecipeCarousel({ recipes, timeLabel = "Hari" }: RecipeCa
                     transition={{ duration: 0.5 }}
                     className="flex flex-col items-center gap-2 max-w-md z-1"
                   >
-                    <div className="w-14 h-14 rounded-full bg-orange-600/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-2 shadow-inner">
+                    <div className="w-14 h-14 rounded-full bg-amber-600/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-2 shadow-inner">
                       <ChefHat size={28} className="stroke-[1.8]" />
                     </div>
-                    <span className="text-[10px] md:text-xs text-orange-400 font-bold uppercase tracking-[0.25em]">No Cover Image</span>
+                    <span className="text-[10px] md:text-xs text-amber-400 font-bold uppercase tracking-[0.25em]">No Cover Image</span>
                     <p className="text-gray-400 text-xs tracking-wide">Tetap penuh esensi rasa & kreasi yang menggugah selera!</p>
                   </motion.div>
                 </div>
@@ -60,9 +60,11 @@ export default function RecipeCarousel({ recipes, timeLabel = "Hari" }: RecipeCa
             }
             
             return (
-              <div 
-                className="absolute inset-0 bg-cover bg-center transform transition-transform duration-[10s] md:group-hover:scale-105"
-                style={{ backgroundImage: `url(${currentRecipe.coverImage})` }}
+              <img 
+                src={currentRecipe.coverImage}
+                alt={currentRecipe.title}
+                className="absolute inset-0 w-full h-full object-cover transform transition-transform duration-[10s] md:group-hover:scale-105"
+                referrerPolicy="no-referrer"
               />
             );
           })()}
@@ -70,7 +72,7 @@ export default function RecipeCarousel({ recipes, timeLabel = "Hari" }: RecipeCa
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent md:to-black/10" />
           
           <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 flex flex-col items-start z-10">
-            <span className="bg-orange-600 text-white px-4 py-1.5 md:py-2 text-[10px] md:text-xs font-black tracking-[0.15em] uppercase rounded-full mb-4 shadow-lg capitalize border border-orange-500/50">
+            <span className="bg-amber-500 text-white px-4 py-1.5 md:py-2 text-[10px] md:text-xs font-black tracking-[0.15em] uppercase rounded-full mb-4 shadow-lg capitalize border border-amber-400/50">
               Rekomendasi {timeLabel} Ini
             </span>
             <h2 className="text-2xl md:text-5xl font-serif font-black text-white mb-3 max-w-3xl leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
@@ -95,7 +97,7 @@ export default function RecipeCarousel({ recipes, timeLabel = "Hari" }: RecipeCa
             key={idx}
             onClick={() => setCurrentIndex(idx)}
             className={`h-2.5 rounded-full transition-all duration-300 ${
-              idx === currentIndex ? 'bg-orange-500 w-8 shadow-[0_0_10px_rgba(234,88,12,0.8)]' : 'bg-white/60 w-2.5 hover:bg-white'
+              idx === currentIndex ? 'bg-amber-500 w-8 shadow-[0_0_10px_rgba(245,158,11,0.8)]' : 'bg-white/60 w-2.5 hover:bg-white'
             }`}
             aria-label={`Go to slide ${idx + 1}`}
           />

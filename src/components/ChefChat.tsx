@@ -125,12 +125,12 @@ export default function ChefChat({ isOpen, onToggle }: { isOpen: boolean, onTogg
         >
           <div className="p-5 bg-gray-900 text-white flex items-center justify-between relative overflow-hidden">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center text-white shadow-lg">
+              <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-white shadow-lg">
                 <Salad size={20} />
               </div>
               <div>
                 <h3 className="text-sm font-bold tracking-tight">AI Nutritionist</h3>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400 opacity-80">Chef Digital Dapursehat</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400 opacity-80">Chef Digital Dapursehat</span>
               </div>
             </div>
             <button 
@@ -147,22 +147,22 @@ export default function ChefChat({ isOpen, onToggle }: { isOpen: boolean, onTogg
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] px-4 py-3 rounded-2xl shadow-sm text-[15px] leading-relaxed ${
                   msg.role === 'user' 
-                  ? 'bg-orange-600 text-white' 
+                  ? 'bg-amber-500 text-white' 
                   : 'bg-white text-gray-900 border border-gray-200'
                 }`}>
                   <div className={`prose max-w-none prose-p:leading-relaxed prose-li:my-1 ${
                     msg.role === 'user' 
                     ? 'prose-invert text-white prose-p:text-white prose-strong:text-white' 
-                    : 'prose-orange text-gray-900 prose-p:text-gray-900 prose-headings:text-gray-900 prose-headings:font-bold prose-strong:text-orange-900 prose-li:text-gray-900 prose-ul:text-gray-900 prose-ol:text-gray-900'
+                    : 'prose-amber text-gray-900 prose-p:text-gray-900 prose-headings:text-gray-900 prose-headings:font-bold prose-strong:text-amber-900 prose-li:text-gray-900 prose-ul:text-gray-900 prose-ol:text-gray-900'
                   }`}>
                     <ReactMarkdown>{msg.text}</ReactMarkdown>
                   </div>
                   {msg.role === 'ai' && (
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <button
+                       <button
                         onClick={() => handleSaveToCustomRecipe(msg.text)}
                         disabled={savingRecipe || savingIngredients}
-                        className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg transition-colors border border-orange-200/50"
+                        className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-colors border border-amber-200/50"
                       >
                         {savingRecipe ? <Loader2 size = {12} className="animate-spin" /> : <Save size={12} />}
                         Simpan Resep
@@ -183,7 +183,7 @@ export default function ChefChat({ isOpen, onToggle }: { isOpen: boolean, onTogg
             {loading && (
               <div className="flex justify-start">
                 <div className="bg-white border border-gray-100 px-4 py-3 rounded-2xl shadow-sm">
-                  <Loader2 size={16} className="animate-spin text-orange-600" />
+                  <Loader2 size={16} className="animate-spin text-amber-500" />
                 </div>
               </div>
             )}
@@ -197,12 +197,12 @@ export default function ChefChat({ isOpen, onToggle }: { isOpen: boolean, onTogg
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Apa yang ingin Anda masak?"
-                    className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-orange-100 outline-none transition-all"
+                    className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-100 outline-none transition-all"
                   />
                   <button 
                     type="submit"
                     disabled={!input.trim() || loading}
-                    className="p-3 bg-gray-900 text-white rounded-xl hover:bg-orange-600 transition-all shadow-md disabled:opacity-50 active:scale-95 flex items-center justify-center"
+                    className="p-3 bg-gray-900 text-white rounded-xl hover:bg-amber-500 transition-all shadow-md disabled:opacity-50 active:scale-95 flex items-center justify-center"
                   >
                     <Send size={18} />
                   </button>

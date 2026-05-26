@@ -297,7 +297,7 @@ export default function CustomRecipeDetail() {
                     {inst.duration ? (
                       <button 
                         onClick={() => startTimer(inst.duration || 0)}
-                        className="flex items-center gap-1.5 bg-orange-50 text-orange-600 hover:bg-orange-100 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors shrink-0"
+                        className="flex items-center gap-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors shrink-0"
                       >
                         <PlayCircle size={14} />
                         Mulai Timer

@@ -34,7 +34,7 @@ const CATEGORIES = [
   { id: 'semua', label: 'Semua', color: 'bg-stone-200' },
   { id: 'pagi', label: 'Pagi', color: 'bg-emerald-100' },
   { id: 'siang', label: 'Siang', color: 'bg-amber-100' },
-  { id: 'sore', label: 'Sore', color: 'bg-orange-100' },
+  { id: 'sore', label: 'Sore', color: 'bg-amber-100' },
   { id: 'malam', label: 'Malam', color: 'bg-indigo-100' },
 ];
 
@@ -139,7 +139,7 @@ export default function Home() {
       {/* Minimal Floating Elements Background */}
       <div className="hidden md:block">
         <FloatingElement x={5} y={15} rotate={15} delay={0}><Leaf size={56} className="text-emerald-500" /></FloatingElement>
-        <FloatingElement x={85} y={25} rotate={-20} delay={1}><Carrot size={64} className="text-orange-500" /></FloatingElement>
+        <FloatingElement x={85} y={25} rotate={-20} delay={1}><Carrot size={64} className="text-amber-500" /></FloatingElement>
         <FloatingElement x={15} y={65} rotate={10} delay={2}><Coffee size={48} className="text-amber-500" /></FloatingElement>
         <FloatingElement x={80} y={75} rotate={-15} delay={1.5}><Sparkles size={44} className="text-yellow-400" /></FloatingElement>
       </div>
@@ -149,7 +149,7 @@ export default function Home() {
         whileHover={{ scale: 1.05, x: 5 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsFilterOpen(true)}
-        className="fixed bottom-24 md:bottom-6 left-4 md:left-6 z-[100] bg-orange-600 text-white px-4 md:px-6 h-12 md:h-16 rounded-full md:rounded-[2rem] shadow-lg shadow-orange-200/50 flex items-center gap-2 md:gap-3 border-4 border-white transition-all group"
+        className="fixed bottom-24 md:bottom-6 left-4 md:left-6 z-[100] bg-amber-500 text-white px-4 md:px-6 h-12 md:h-16 rounded-full md:rounded-[2rem] shadow-lg shadow-amber-500/20 flex items-center gap-2 md:gap-3 border-4 border-white transition-all group"
       >
         <Filter size={18} className="md:size-[20px] group-hover:rotate-12 transition-transform" />
         <span className="font-black uppercase tracking-widest text-[10px] md:text-sm">Filter</span>
@@ -181,7 +181,7 @@ export default function Home() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 md:gap-5">
-                  <div className="w-10 h-10 md:w-14 md:h-14 bg-orange-600 rounded-2xl md:rounded-3xl flex items-center justify-center text-white rotate-6 transition-transform hover:rotate-0">
+                  <div className="w-10 h-10 md:w-14 md:h-14 bg-amber-500 rounded-2xl md:rounded-3xl flex items-center justify-center text-white rotate-6 transition-transform hover:rotate-0">
                     <Filter size={20} className="md:size-[28px]" />
                   </div>
                   <div>
@@ -200,8 +200,8 @@ export default function Home() {
               <div className="flex-1 overflow-y-auto pr-2 md:pr-6 custom-scrollbar grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
                 <section>
                   <div className="flex items-center gap-3 mb-6 md:mb-8">
-                    <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-600 opacity-80">Makan Kapan?</h3>
+                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 opacity-80">Makan Kapan?</h3>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                     {CATEGORIES.map((cat) => (
@@ -219,8 +219,8 @@ export default function Home() {
                         }}
                         className={`relative flex items-center gap-5 p-4 md:p-6 rounded-[1.5rem] md:rounded-[2.5rem] font-bold transition-all duration-300 md:hover:-translate-y-1 md:hover:shadow-lg border-2 ${
                           selectedCategory === cat.id 
-                          ? 'bg-orange-600 text-white border-orange-600 shadow-orange-200/50' 
-                          : 'bg-white md:bg-gray-50/50 text-gray-800 border-gray-100 md:border-transparent md:hover:bg-white md:hover:border-orange-100 shadow-sm'
+                          ? 'bg-amber-500 text-white border-amber-500 shadow-amber-200/50' 
+                          : 'bg-white md:bg-gray-50/50 text-gray-800 border-gray-100 md:border-transparent md:hover:bg-white md:hover:border-amber-100 shadow-sm'
                         }`}
                       >
                         <span className="text-2xl md:text-3xl drop-shadow-sm">
@@ -243,8 +243,8 @@ export default function Home() {
 
                 <section className="flex flex-col">
                   <div className="flex items-center gap-3 mb-6 md:mb-8">
-                    <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-600 opacity-80">Kebutuhan Spesial</h3>
+                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 opacity-80">Kebutuhan Spesial</h3>
                   </div>
                   <div className="flex flex-col gap-2.5">
                     {dynamicHealthConditions.map((cond) => (
@@ -253,7 +253,7 @@ export default function Home() {
                         initial={{ opacity: 0, x: 10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.2 }}
-                        whileHover={{ x: 6, backgroundColor: selectedCondition === cond ? "" : "rgba(249, 115, 22, 0.05)" }}
+                        whileHover={{ x: 6, backgroundColor: selectedCondition === cond ? "" : "rgba(245, 158, 11, 0.05)" }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => {
                           const newParams = new URLSearchParams(searchParams);
@@ -267,8 +267,8 @@ export default function Home() {
                         }}
                         className={`relative flex items-center justify-between gap-4 text-xs md:text-sm p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] font-bold transition-all duration-300 md:hover:translate-x-2 border-2 ${
                           selectedCondition === cond
-                          ? 'bg-orange-600 text-white border-orange-600 shadow-xl shadow-orange-100/50'
-                          : 'bg-white md:bg-gray-50/50 text-gray-500 hover:text-gray-900 border-gray-100 md:border-transparent md:hover:bg-orange-50/30'
+                          ? 'bg-amber-500 text-white border-amber-500 shadow-xl shadow-amber-100/50'
+                          : 'bg-white md:bg-gray-50/50 text-gray-500 hover:text-gray-900 border-gray-100 md:border-transparent md:hover:bg-amber-50/30'
                         }`}
                       >
                         <span className="tracking-tight text-sm md:text-lg font-black">{cond}</span>
@@ -282,7 +282,7 @@ export default function Home() {
                   </div>
 
                   <div className="mt-auto pt-10">
-                    <div className="p-5 md:p-8 rounded-[2.5rem] md:rounded-[3.5rem] bg-gradient-to-br from-orange-50 to-orange-100/50 border border-orange-200/20 text-orange-900 relative overflow-hidden group">
+                    <div className="p-5 md:p-8 rounded-[2.5rem] md:rounded-[3.5rem] bg-gradient-to-br from-amber-50 to-yellow-100/50 border border-amber-200/20 text-amber-900 relative overflow-hidden group">
                       <motion.div 
                         animate={{ rotate: 360 }}
                         transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
@@ -291,10 +291,10 @@ export default function Home() {
                         <Sparkles size={120} />
                       </motion.div>
                       <h4 className="font-serif font-black text-base md:text-xl mb-1 flex items-center gap-2">
-                        <Salad size={20} className="text-orange-600" />
+                        <Salad size={20} className="text-amber-600" />
                         Bingung pilih menu?
                       </h4>
-                      <p className="text-[9px] md:text-xs text-orange-800/60 font-bold leading-relaxed uppercase tracking-widest">
+                      <p className="text-[9px] md:text-xs text-amber-800/60 font-bold leading-relaxed uppercase tracking-widest">
                         Tanyakan AI Asisten untuk rekomendasi personal yang sehat.
                       </p>
                     </div>
@@ -343,7 +343,7 @@ export default function Home() {
                 placeholder="Cari bahan makanan (Contoh: Jahe, Ayam, Brokoli...)" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-orange-100 focus:border-orange-200 outline-none text-sm transition-all duration-300"
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-amber-100 focus:border-amber-200 outline-none text-sm transition-all duration-300"
               />
             </div>
           </div>
@@ -361,14 +361,14 @@ export default function Home() {
                 <motion.div 
                   animate={{ rotate: 360 }}
                   transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="w-16 h-16 border-4 border-orange-100 border-t-orange-600 rounded-full"
+                  className="w-16 h-16 border-4 border-amber-100 border-t-amber-500 rounded-full"
                 />
                 <motion.div 
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                   className="absolute inset-0 flex items-center justify-center"
                 >
-                  <div className="w-2 h-2 bg-orange-600 rounded-full" />
+                  <div className="w-2 h-2 bg-amber-500 rounded-full" />
                 </motion.div>
               </div>
               <motion.p 

@@ -815,17 +815,17 @@ export default function CookingTimer() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: showBelow ? -20 : 20 }}
             style={{ left: `${relativeLeft}px` }}
-            className={`absolute ${showBelow ? 'top-full mt-4' : 'bottom-full mb-4'} w-[calc(100vw-48px)] sm:w-64 bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl shadow-orange-950/10 p-6 border border-gray-100/80 overflow-hidden`}
+            className={`absolute ${showBelow ? 'top-full mt-4' : 'bottom-full mb-4'} w-[calc(100vw-48px)] sm:w-64 bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl shadow-amber-950/10 p-6 border border-gray-100/80 overflow-hidden`}
           >
             {isFinished && (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="absolute inset-0 bg-orange-600/10 flex flex-col items-center justify-center pointer-events-none"
+                className="absolute inset-0 bg-amber-500/10 flex flex-col items-center justify-center pointer-events-none"
               >
-                <div className="hidden md:block animate-ping bg-orange-600 w-12 h-12 rounded-full opacity-20"></div>
+                <div className="hidden md:block animate-ping bg-amber-500 w-12 h-12 rounded-full opacity-20"></div>
                 {!window.matchMedia('(min-width: 768px)').matches && (
-                  <div className="bg-orange-600/20 w-full h-full animate-pulse" />
+                  <div className="bg-amber-500/20 w-full h-full animate-pulse" />
                 )}
               </motion.div>
             )}
@@ -860,7 +860,7 @@ export default function CookingTimer() {
                 {isFinished ? (
                    <button
                      onClick={resetTimer}
-                     className="flex-1 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm bg-orange-600 text-white hover:bg-orange-700 shadow-orange-100"
+                     className="flex-1 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm bg-amber-500 text-white hover:bg-amber-600 shadow-amber-100"
                    >
                      <span className="text-xs font-bold uppercase tracking-widest">Matikan Alarm</span>
                    </button>
@@ -870,7 +870,7 @@ export default function CookingTimer() {
                     className={`flex-1 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm ${
                       isActive 
                         ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' 
-                        : 'bg-orange-600 text-white hover:bg-orange-700 shadow-orange-100'
+                        : 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-100'
                     }`}
                   >
                     {isActive ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
@@ -883,7 +883,7 @@ export default function CookingTimer() {
                 <motion.p 
                   initial={{ y: 5, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  className="mt-4 text-orange-600 text-[10px] font-bold uppercase tracking-widest animate-pulse"
+                  className="mt-4 text-amber-500 text-[10px] font-bold uppercase tracking-widest animate-pulse"
                 >
                   Waktu Habis! 🍜
                 </motion.p>
@@ -893,10 +893,10 @@ export default function CookingTimer() {
                  <motion.div
                    initial={{ opacity: 0 }}
                    animate={{ opacity: 1 }}
-                   className="mt-6 p-4 bg-orange-50 rounded-xl"
+                   className="mt-6 p-4 bg-amber-50 rounded-xl"
                  >
-                   <p className="text-orange-800 text-[10px] font-bold uppercase tracking-widest mb-1">Penting untuk iOS</p>
-                   <p className="text-orange-600/80 text-[10px] leading-relaxed">
+                   <p className="text-amber-800 text-[10px] font-bold uppercase tracking-widest mb-1">Penting untuk iOS</p>
+                   <p className="text-amber-600/80 text-[10px] leading-relaxed">
                      Agar notifikasi dan alarm berfungsi penuh, ketuk ikon bagikan <Share size={10} className="inline mx-1" /> di bawah layar Safari Anda, lalu pilih <strong>"Tambah ke Layar Utama"</strong>.
                    </p>
                  </motion.div>
@@ -909,7 +909,7 @@ export default function CookingTimer() {
       <div className="relative group/timer-btn">
         {/* Hover drag instruction tooltip */}
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-gray-950/95 text-white backdrop-blur-sm shadow-xl p-2.5 rounded-2xl border border-gray-800 pointer-events-none opacity-0 group-hover/timer-btn:opacity-100 transition-opacity duration-300 flex flex-col items-center gap-0.5 z-50">
-          <span className="text-[10px] font-black uppercase text-orange-400 tracking-widest whitespace-nowrap">Gestur Menggeser</span>
+          <span className="text-[10px] font-black uppercase text-amber-400 tracking-widest whitespace-nowrap">Gestur Menggeser</span>
           <span className="text-[9px] font-bold text-gray-300 font-sans whitespace-nowrap">💻 Klik Kiri + Tarik | 📱 Tahan + Tarik</span>
         </div>
 
@@ -931,27 +931,27 @@ export default function CookingTimer() {
           className={`relative flex flex-col items-center justify-center transition-all duration-500 border select-none cursor-grab active:cursor-grabbing w-16 h-16 rounded-[2rem] shadow-2xl ${
             isOpen 
               ? 'bg-gray-900 border-gray-900 text-white shadow-gray-950/20' 
-              : 'bg-white text-orange-600 border-orange-50 hover:border-orange-200/50 shadow-orange-950/10 hover:shadow-orange-950/15'
-          } ${isActive ? 'ring-4 ring-orange-100/80' : ''}`}
+              : 'bg-white text-amber-500 border-amber-50 hover:border-amber-200/50 shadow-amber-950/10 hover:shadow-amber-950/15'
+          } ${isActive ? 'ring-4 ring-amber-100/80' : ''}`}
         >
           {isFinished && (
             <span className="absolute -top-1.5 -right-1.5 flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
             </span>
           )}
 
           {/* Premium tiny visual drag handle dots */}
           {!isActive && !isOpen && (
             <div className="flex gap-1 justify-center mb-1.5 opacity-40 group-hover/timer-btn:opacity-100 transition-opacity">
-              <span className="w-1 h-1 rounded-full bg-orange-500" />
-              <span className="w-1 h-1 rounded-full bg-orange-500" />
-              <span className="w-1 h-1 rounded-full bg-orange-500" />
+              <span className="w-1 h-1 rounded-full bg-amber-500" />
+              <span className="w-1 h-1 rounded-full bg-amber-500" />
+              <span className="w-1 h-1 rounded-full bg-amber-500" />
             </div>
           )}
           
           {isActive ? (
-            <span className="text-[11px] font-black tabular-nums font-sans tracking-tight text-orange-600">
+            <span className="text-[11px] font-black tabular-nums font-sans tracking-tight text-amber-500">
               {minutes}:{seconds.toString().padStart(2, '0')}
             </span>
           ) : (

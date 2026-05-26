@@ -244,7 +244,7 @@ export default function AdminDashboard() {
         <Salad size={60} className="text-gray-200 mb-6" />
         <h2 className="text-2xl font-serif font-bold text-gray-900 mb-2">Akses Terbatas</h2>
         <p className="text-gray-500 max-w-xs">Halaman ini hanya dapat diakses oleh admin Dapursehat.</p>
-        <Link to="/" className="mt-8 text-orange-600 font-bold uppercase text-xs tracking-widest hover:underline">Kembali ke Beranda</Link>
+        <Link to="/" className="mt-8 text-amber-500 font-bold uppercase text-xs tracking-widest hover:underline">Kembali ke Beranda</Link>
       </div>
     );
   }
@@ -262,16 +262,16 @@ export default function AdminDashboard() {
             className="fixed top-4 md:top-6 left-0 right-0 z-[100000] flex justify-center pointer-events-none px-4"
           >
             <div className="pointer-events-auto bg-white border border-gray-100 md:bg-white/80 md:backdrop-blur-xl md:border-white/40 shadow-xl shadow-gray-200/30 p-5 rounded-[2rem] flex items-center gap-4 min-w-[300px] max-w-[95vw] w-[380px] overflow-hidden relative group">
-              <div className="absolute top-0 left-0 w-full h-[2px] bg-orange-100/30 overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-[2px] bg-amber-100/30 overflow-hidden">
                 <motion.div 
                   initial={{ x: '-100%' }}
                   animate={{ x: '100%' }}
                   transition={{ duration: 3, ease: "linear" }}
-                  className="w-full h-full bg-gradient-to-r from-transparent via-orange-500 to-transparent"
+                  className="w-full h-full bg-gradient-to-r from-transparent via-amber-500 to-transparent"
                 />
               </div>
 
-              <div className="w-12 h-12 bg-orange-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-orange-200">
+              <div className="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-amber-200">
                 <Salad size={24} />
               </div>
 
@@ -285,7 +285,7 @@ export default function AdminDashboard() {
               </div>
 
               <motion.div 
-                className="absolute -right-4 -bottom-4 opacity-10 text-orange-500 pointer-events-none"
+                className="absolute -right-4 -bottom-4 opacity-10 text-amber-500 pointer-events-none"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
               >
@@ -324,7 +324,7 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-serif font-bold text-gray-900">{editingRecipeId ? 'Perbarui Resep' : 'Buat Resep Baru'}</h2>
                 {editingRecipeId && (
-                  <button type="button" onClick={resetForm} className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-orange-600 transition-colors">Batal Edit</button>
+                  <button type="button" onClick={resetForm} className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-amber-500 transition-colors">Batal Edit</button>
                 )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -336,7 +336,7 @@ export default function AdminDashboard() {
                     <select 
                         value={mealTime} 
                         onChange={(e: any) => setMealTime(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-100 text-sm text-gray-700 transition-all cursor-pointer"
+                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-amber-100 text-sm text-gray-700 transition-all cursor-pointer"
                     >
                       <option value="pagi">🌅 Pagi</option>
                       <option value="siang">☀️ Siang</option>
@@ -369,7 +369,7 @@ export default function AdminDashboard() {
                           value={condition} 
                           onChange={(e) => setCondition(e.target.value)} 
                           placeholder="Contoh: Maag Safe"
-                          className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-orange-100 outline-none text-gray-700 transition-all placeholder:text-gray-300"
+                          className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-100 outline-none text-gray-700 transition-all placeholder:text-gray-300"
                         />
                         <datalist id="existing-conditions">
                           {Array.from(new Set(recipes.map(r => r.condition).filter(Boolean))).map(c => (
@@ -400,7 +400,7 @@ export default function AdminDashboard() {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={handleAddIngredient} 
-                    className="text-orange-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-all"
+                    className="text-amber-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-all"
                   >
                     <Plus size={14}/> Tambah
                   </motion.button>
@@ -412,7 +412,7 @@ export default function AdminDashboard() {
                         value={ing} 
                         onChange={(e) => handleIngredientChange(i, e.target.value)} 
                         placeholder={`Bahan ${i+1}`}
-                        className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-orange-100"
+                        className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-100"
                       />
                       {ingredients.length > 1 && (
                         <button type="button" onClick={() => handleRemoveIngredient(i)} className="p-2 text-gray-300 hover:text-red-500 transition-colors"><X size={18}/></button>
@@ -431,7 +431,7 @@ export default function AdminDashboard() {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={handleAddTool} 
-                    className="text-orange-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-all"
+                    className="text-amber-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-all"
                   >
                     <Plus size={14}/> Tambah
                   </motion.button>
@@ -443,7 +443,7 @@ export default function AdminDashboard() {
                         value={tl} 
                         onChange={(e) => handleToolChange(i, e.target.value)} 
                         placeholder={`Alat ${i+1}`}
-                        className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-orange-100"
+                        className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-100"
                       />
                       {tools.length > 1 && (
                         <button type="button" onClick={() => handleRemoveTool(i)} className="p-2 text-gray-300 hover:text-red-500 transition-colors"><X size={18}/></button>
@@ -462,14 +462,14 @@ export default function AdminDashboard() {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={handleAddInstruction} 
-                    className="text-orange-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-all"
+                    className="text-amber-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-all"
                   >
                     <Plus size={14}/> Tambah
                   </motion.button>
                 </div>
                 <div className="space-y-6">
                   {instructions.map((step, i) => (
-                    <div key={i} className="bg-gray-50 p-8 rounded-3xl border border-gray-100 relative group transition-all hover:border-orange-200">
+                    <div key={i} className="bg-gray-50 p-8 rounded-3xl border border-gray-100 relative group transition-all hover:border-amber-200">
                       <div className="flex flex-col gap-6">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -492,7 +492,7 @@ export default function AdminDashboard() {
                               value={step.text} 
                               onChange={(e) => handleInstructionChange(i, 'text', e.target.value)}
                               placeholder={`Jelaskan secara detail langkah ke-${step.step} ini...`}
-                              className="w-full bg-white border border-gray-100 rounded-2xl px-6 py-5 outline-none focus:ring-2 focus:ring-orange-100 text-base leading-relaxed min-h-[160px] transition-all"
+                              className="w-full bg-white border border-gray-100 rounded-2xl px-6 py-5 outline-none focus:ring-2 focus:ring-amber-100 text-base leading-relaxed min-h-[160px] transition-all"
                               required
                             />
                           </div>
@@ -514,7 +514,7 @@ export default function AdminDashboard() {
                                   value={step.imageCredit || ''}
                                   onChange={(e) => handleInstructionChange(i, 'imageCredit', e.target.value)}
                                   placeholder="Contoh: pexels.com"
-                                  className="w-full bg-white border border-gray-100 rounded-xl px-4 py-2.5 text-xs focus:ring-2 focus:ring-orange-100 outline-none transition-all placeholder:text-gray-300"
+                                  className="w-full bg-white border border-gray-100 rounded-xl px-4 py-2.5 text-xs focus:ring-2 focus:ring-amber-100 outline-none transition-all placeholder:text-gray-300"
                                 />
                               </div>
                             )}
@@ -528,7 +528,7 @@ export default function AdminDashboard() {
                                   onChange={(e) => handleInstructionChange(i, 'duration', parseInt(e.target.value) || 0)}
                                   placeholder="0"
                                   min="0"
-                                  className="w-20 bg-white border border-gray-100 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-orange-100 outline-none transition-all"
+                                  className="w-20 bg-white border border-gray-100 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-amber-100 outline-none transition-all"
                                 />
                                 <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Menit</span>
                               </div>
@@ -548,7 +548,7 @@ export default function AdminDashboard() {
                   disabled={submitting}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="px-10 py-4 bg-gray-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-md disabled:opacity-50"
+                  className="px-10 py-4 bg-gray-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-amber-500 transition-all shadow-md disabled:opacity-50"
                 >
                   {submitting ? <Loader2 className="animate-spin" size={16} /> : 'Simpan Resep'}
                 </motion.button>
@@ -567,11 +567,11 @@ export default function AdminDashboard() {
             {recipes.map((recipe) => {
               const isNoImage = !recipe.coverImage || recipe.coverImage === '' || recipe.coverImage.includes('unsplash.com/photo-1546069901-ba9599a7e63c');
               return (
-                <div key={recipe.id} className="bg-white p-4 rounded-2xl border border-gray-100 flex gap-4 items-center shadow-sm hover:border-orange-200 transition-colors group">
+                <div key={recipe.id} className="bg-white p-4 rounded-2xl border border-gray-100 flex gap-4 items-center shadow-sm hover:border-amber-200 transition-colors group">
                   {isNoImage ? (
-                    <div className="w-20 h-20 rounded-xl bg-orange-50/60 flex flex-col items-center justify-center border border-orange-100/40 text-orange-600 group-hover:bg-orange-100/30 transition-all duration-300 shrink-0 select-none">
-                      <ChefHat size={18} className="stroke-[1.8] mb-1 text-orange-500 animate-pulse" />
-                      <span className="text-[7px] font-black tracking-widest text-orange-900/60 uppercase">NO PHOTO</span>
+                    <div className="w-20 h-20 rounded-xl bg-amber-50/60 flex flex-col items-center justify-center border border-amber-100/40 text-amber-500 group-hover:bg-amber-100/30 transition-all duration-300 shrink-0 select-none">
+                      <ChefHat size={18} className="stroke-[1.8] mb-1 text-amber-500 animate-pulse" />
+                      <span className="text-[7px] font-black tracking-widest text-amber-900/60 uppercase">NO PHOTO</span>
                     </div>
                   ) : (
                     <img src={recipe.coverImage} className="w-20 h-20 rounded-xl object-cover grayscale brightness-95 group-hover:grayscale-0 transition-all duration-500 shrink-0" referrerPolicy="no-referrer" />
@@ -591,7 +591,7 @@ export default function AdminDashboard() {
                       </div>
                     ) : (
                       <>
-                        <button onClick={() => handleEditClick(recipe)} className="text-[10px] font-bold text-orange-600 hover:text-orange-700 uppercase tracking-widest transition-colors">
+                        <button onClick={() => handleEditClick(recipe)} className="text-[10px] font-bold text-amber-500 hover:text-amber-600 uppercase tracking-widest transition-colors">
                             Edit
                         </button>
                         <button onClick={() => setDeletingRecipeId(recipe.id)} className="text-[10px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest transition-colors">
@@ -683,7 +683,7 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredUsers.map((user) => (
                 <div key={user.uid} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col items-center text-center relative group overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-orange-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute top-0 left-0 w-full h-1 bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   
                   <div className="relative mb-4">
                     <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}&background=random`} className="w-20 h-20 rounded-[2rem] object-cover shadow-lg border-4 border-gray-50" />
@@ -700,7 +700,7 @@ export default function AdminDashboard() {
                   <div className="w-full pt-4 border-t border-gray-50 flex items-center justify-between">
                     <div className="flex flex-col items-start gap-0.5">
                       <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Peran</span>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider ${user.role === 'admin' ? 'text-orange-600' : 'text-gray-500'}`}>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${user.role === 'admin' ? 'text-amber-500' : 'text-gray-500'}`}>
                         {user.role}
                       </span>
                     </div>
@@ -716,7 +716,7 @@ export default function AdminDashboard() {
                       className={`relative z-10 p-2.5 rounded-xl transition-all shadow-sm ${
                         user.role === 'admin' 
                         ? 'bg-red-50 text-red-500 hover:bg-red-100 hover:shadow-red-100/50' 
-                        : 'bg-orange-50 text-orange-600 hover:bg-orange-100 hover:shadow-orange-100/50'
+                        : 'bg-amber-50 text-amber-500 hover:bg-amber-100 hover:shadow-amber-100/50'
                       }`}
                       title={user.role === 'admin' ? "Jadikan User Biasa" : "Jadikan Admin"}
                     >
@@ -779,7 +779,7 @@ function ImageUpload({ value, onChange, folder, compact = false }: { value: stri
   return (
     <div className="space-y-4">
       <div 
-        className={`relative group cursor-pointer border-2 border-dashed border-gray-200 rounded-2xl overflow-hidden bg-gray-50 flex flex-col items-center justify-center transition-all hover:border-orange-200 ${compact ? 'aspect-video' : 'aspect-[16/9]'}`}
+        className={`relative group cursor-pointer border-2 border-dashed border-gray-200 rounded-2xl overflow-hidden bg-gray-50 flex flex-col items-center justify-center transition-all hover:border-amber-200 ${compact ? 'aspect-video' : 'aspect-[16/9]'}`}
         onClick={() => fileInputRef.current?.click()}
       >
         {value ? (
@@ -803,8 +803,8 @@ function ImageUpload({ value, onChange, folder, compact = false }: { value: stri
 
         {uploading && (
           <div className="absolute inset-0 bg-white/95 md:bg-white/80 md:backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in z-50">
-            <Loader2 className="animate-spin text-orange-600 mb-2" size={24} />
-            <span className="text-[10px] font-bold text-orange-600 uppercase tracking-widest">Uploading...</span>
+            <Loader2 className="animate-spin text-amber-500 mb-2" size={24} />
+            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Uploading...</span>
           </div>
         )}
       </div>
@@ -823,7 +823,7 @@ function ImageUpload({ value, onChange, folder, compact = false }: { value: stri
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Atau tempel URL Gambar langsung..."
-          className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-orange-100 outline-none text-gray-700 transition-all placeholder:text-gray-300"
+          className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-amber-100 outline-none text-gray-700 transition-all placeholder:text-gray-300"
         />
       </div>
 
@@ -871,7 +871,7 @@ function FormInput({ label, value, onChange, placeholder, type = 'text', require
         value={value} 
         onChange={(e) => onChange(e.target.value)} 
         placeholder={placeholder}
-        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-orange-100 outline-none text-gray-700 transition-all placeholder:text-gray-300"
+        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-100 outline-none text-gray-700 transition-all placeholder:text-gray-300"
       />
     </div>
   );

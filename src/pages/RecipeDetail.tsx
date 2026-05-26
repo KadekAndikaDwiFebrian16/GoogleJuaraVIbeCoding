@@ -269,7 +269,7 @@ export default function RecipeDetail() {
         
         {recipe.imageCredit && (
           <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md text-gray-950 text-[10px] font-bold tracking-widest uppercase px-4 py-2.5 rounded-2xl border border-gray-100/80 shadow-sm hover:bg-white transition-all z-10 font-sans flex items-center gap-1.5 select-none animate-in fade-in duration-300">
-            <span className="text-orange-650">📸</span>
+            <span className="text-amber-500">📸</span>
             <span>FOTO: {recipe.imageCredit}</span>
           </div>
         )}
@@ -294,11 +294,11 @@ export default function RecipeDetail() {
               <div className="flex gap-2 mb-6">
                 <span className="bg-gray-50 text-gray-500 text-[10px] uppercase font-bold px-3 py-1 rounded-full border border-gray-100 tracking-widest">{recipe.mealTime}</span>
                 {recipe.condition && (
-                  <span className="bg-orange-600 text-white text-[10px] uppercase font-bold px-3 py-1 rounded-full tracking-widest">{recipe.condition}</span>
+                  <span className="bg-amber-500 text-white text-[10px] uppercase font-bold px-3 py-1 rounded-full tracking-widest">{recipe.condition}</span>
                 )}
               </div>
               <h1 className="text-4xl md:text-5xl font-serif font-bold text-gray-900 mb-6 leading-tight">{recipe.title}</h1>
-              <p className="text-gray-500 leading-relaxed text-base max-w-2xl border-l-2 border-orange-600 pl-6">
+              <p className="text-gray-500 leading-relaxed text-base max-w-2xl border-l-2 border-amber-500 pl-6">
                 {recipe.description}
               </p>
             </div>
@@ -307,7 +307,7 @@ export default function RecipeDetail() {
                 <div className="flex items-center justify-between mb-6">
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Rating</span>
                     <div className="flex flex-col items-end">
-                      <div className="flex items-center gap-1 text-orange-600">
+                      <div className="flex items-center gap-1 text-amber-500">
                           <Star size={16} fill="currentColor" />
                           <span className="font-bold text-lg">{recipe.rating.toFixed(1)}</span>
                       </div>
@@ -339,7 +339,7 @@ export default function RecipeDetail() {
               <div className="mb-12">
                 <h3 className="text-[11px] uppercase tracking-widest font-bold text-gray-400 mb-6 px-1">Gizi Lengkap</h3>
                 <div className="space-y-2">
-                  <NutritionRow label="Kalori" value={recipe.nutrition.calories} unit="kkal" color="bg-orange-600" />
+                  <NutritionRow label="Kalori" value={recipe.nutrition.calories} unit="kkal" color="bg-amber-500" />
                   <NutritionRow label="Protein" value={recipe.nutrition.protein} unit="g" color="bg-gray-900" />
                   <NutritionRow label="Lemak" value={recipe.nutrition.fat} unit="g" color="bg-gray-400" />
                   <NutritionRow label="Karbo" value={recipe.nutrition.carbs} unit="g" color="bg-gray-200" />
@@ -356,7 +356,7 @@ export default function RecipeDetail() {
                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
                       className="flex items-start gap-3 group cursor-default"
                     >
-                      <div className="w-1.5 h-1.5 rounded-full bg-orange-600 mt-1.5 shrink-0 transition-transform duration-200 group-hover:scale-130" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0 transition-transform duration-200 group-hover:scale-130" />
                       <span className="text-gray-600 text-sm leading-relaxed group-hover:text-gray-900 transition-colors duration-200 uppercase font-bold tracking-tighter">{ing}</span>
                     </motion.li>
                   ))}
@@ -404,13 +404,13 @@ export default function RecipeDetail() {
                             <div className="w-10 h-10 bg-gray-900 text-white rounded-xl flex items-center justify-center text-sm font-black shadow-lg">
                               {idx + 1}
                             </div>
-                            <span className="text-[9px] font-bold text-orange-600 uppercase tracking-[0.3em]">Langkah Persiapan</span>
+                            <span className="text-[9px] font-bold text-amber-500 uppercase tracking-[0.3em]">Langkah Persiapan</span>
                           </div>
                           
-                          <div className="prose prose-orange max-w-none">
+                          <div className="prose prose-amber max-w-none">
                              <p className="text-gray-800 text-base md:text-lg font-medium leading-relaxed">
-                              {step.text}
-                            </p>
+                               {step.text}
+                             </p>
                           </div>
 
                           {step.duration > 0 && (
@@ -431,7 +431,7 @@ export default function RecipeDetail() {
                                   detail: { duration: step.duration } 
                                 }));
                               }}
-                              className="mt-6 flex items-center gap-3 bg-orange-50 text-orange-600 px-5 py-3 rounded-2xl hover:bg-orange-600 hover:text-white transition-all shadow-sm border border-orange-100 group/timer"
+                              className="mt-6 flex items-center gap-3 bg-amber-50 text-amber-500 px-5 py-3 rounded-2xl hover:bg-amber-500 hover:text-white transition-all shadow-sm border border-amber-100 group/timer"
                             >
                               <Timer size={18} className="group-hover/timer:animate-pulse" />
                               <div className="text-left">
@@ -448,7 +448,7 @@ export default function RecipeDetail() {
                         </div>
                         
                         {step.image && (
-                          <div className="order-1 lg:order-2 w-full aspect-video lg:aspect-[4/3] rounded-3xl overflow-hidden border-4 border-white shadow-lg shadow-orange-100/50 relative group">
+                          <div className="order-1 lg:order-2 w-full aspect-video lg:aspect-[4/3] rounded-3xl overflow-hidden border-4 border-white shadow-lg shadow-amber-100/50 relative group">
                             <img 
                               src={step.image} 
                               alt={`Langkah ${step.step}`} 
@@ -468,13 +468,13 @@ export default function RecipeDetail() {
 
                 {/* Custom Navigation Stepper - Unified floating pill */}
                 <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center z-10 pointer-events-none">
-                  <div className="flex items-center gap-4 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-gray-100/80 shadow-xl shadow-orange-950/5 pointer-events-auto">
-                    <button className="swiper-nav-prev w-9 h-9 bg-gray-50 hover:bg-orange-50 border border-gray-100 rounded-xl flex items-center justify-center text-gray-700 hover:text-orange-600 transition-all duration-300 disabled:opacity-30 cursor-pointer shadow-sm">
+                  <div className="flex items-center gap-4 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-gray-100/80 shadow-xl shadow-amber-950/5 pointer-events-auto">
+                    <button className="swiper-nav-prev w-9 h-9 bg-gray-50 hover:bg-amber-50 border border-gray-100 rounded-xl flex items-center justify-center text-gray-700 hover:text-amber-500 transition-all duration-300 disabled:opacity-30 cursor-pointer shadow-sm">
                       <ChevronLeft size={18} strokeWidth={2.5} />
                     </button>
                     
                     <div className="flex items-center gap-1.5 px-3 select-none min-w-[64px] justify-center">
-                      <span className="font-sans text-sm font-black text-orange-600 tracking-tight">
+                      <span className="font-sans text-sm font-black text-amber-500 tracking-tight">
                         {activeStep + 1}
                       </span>
                       <span className="text-[10px] uppercase tracking-widest font-black text-gray-300">
@@ -485,7 +485,7 @@ export default function RecipeDetail() {
                       </span>
                     </div>
 
-                    <button className="swiper-nav-next w-9 h-9 bg-gray-50 hover:bg-orange-50 border border-gray-100 rounded-xl flex items-center justify-center text-gray-700 hover:text-orange-600 transition-all duration-300 disabled:opacity-30 cursor-pointer shadow-sm">
+                    <button className="swiper-nav-next w-9 h-9 bg-gray-50 hover:bg-amber-50 border border-gray-100 rounded-xl flex items-center justify-center text-gray-700 hover:text-amber-500 transition-all duration-300 disabled:opacity-30 cursor-pointer shadow-sm">
                       <ChevronRight size={18} strokeWidth={2.5} />
                     </button>
                   </div>
@@ -493,9 +493,9 @@ export default function RecipeDetail() {
               </div>
 
               {recipe.tools && recipe.tools.length > 0 && (
-                <div className="mt-8 bg-orange-50/20 p-6 md:p-8 rounded-3xl border border-orange-100/30 shadow-[0_4px_20px_-4px_rgba(234,88,12,0.03)] animate-in fade-in duration-300">
+                <div className="mt-8 bg-amber-50/20 p-6 md:p-8 rounded-3xl border border-amber-100/30 shadow-[0_4px_20px_-4px_rgba(245,158,11,0.03)] animate-in fade-in duration-300">
                   <div className="flex items-start gap-4 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-orange-600/10 text-orange-600 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
                       <Wrench size={18} className="stroke-[2.2]" />
                     </div>
                     <div>
@@ -511,7 +511,7 @@ export default function RecipeDetail() {
                         transition={{ type: "spring", stiffness: 300, damping: 20 }}
                         className="flex items-center gap-2.5 group cursor-default"
                       >
-                        <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0 transition-transform duration-200 group-hover:scale-125" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 transition-transform duration-200 group-hover:scale-125" />
                         <span className="text-sm font-bold text-gray-700 uppercase tracking-tight group-hover:text-gray-900 transition-colors duration-200">{tool}</span>
                       </motion.div>
                     ))}
@@ -535,7 +535,7 @@ export default function RecipeDetail() {
                         <div>
                             <div className="flex justify-between items-center mb-4">
                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Rating</label>
-                               <span className="text-xs font-bold text-orange-600">{rating} / 5</span>
+                               <span className="text-xs font-bold text-amber-500">{rating} / 5</span>
                             </div>
                             <div className="flex gap-2">
                                 {[1, 2, 3, 4, 5].map((star) => (
@@ -543,7 +543,7 @@ export default function RecipeDetail() {
                                         key={star}
                                         type="button"
                                         onClick={() => setRating(star)}
-                                        className={`transition-all ${rating >= star ? 'text-orange-500 scale-110' : 'text-gray-200'}`}
+                                        className={`transition-all ${rating >= star ? 'text-amber-500 scale-110' : 'text-gray-200'}`}
                                     >
                                         <Star size={24} fill={rating >= star ? "currentColor" : "none"} />
                                     </button>
@@ -557,14 +557,14 @@ export default function RecipeDetail() {
                                 value={commentText}
                                 onChange={(e) => setCommentText(e.target.value)}
                                 placeholder="Tuliskan pengalaman Anda..."
-                                className="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-orange-100 min-h-[120px] transition-all"
+                                className="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-amber-100 min-h-[120px] transition-all"
                             />
                         </div>
 
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="w-full bg-gray-900 text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-orange-600 transition-all disabled:opacity-50"
+                            className="w-full bg-gray-900 text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-amber-500 transition-all disabled:opacity-50"
                         >
                             {submitting ? 'Mengirim...' : 'Kirim Ulasan'}
                         </button>
@@ -598,7 +598,7 @@ export default function RecipeDetail() {
                                                 <p className="text-[10px] text-gray-400 font-bold uppercase">{formatDate(comment.createdAt)}</p>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <div className="flex items-center gap-1 text-orange-500 px-2 py-0.5 rounded-lg border border-orange-100 bg-orange-50">
+                                                <div className="flex items-center gap-1 text-amber-500 px-2 py-0.5 rounded-lg border border-amber-100 bg-amber-50">
                                                     <Star size={10} fill="currentColor" />
                                                     <span className="text-[10px] font-bold">{comment.rating}</span>
                                                 </div>
@@ -793,7 +793,7 @@ function NutritionRow({ label, value, unit, color }: { label: string, value: str
         <motion.div 
             whileHover={{ x: 6 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 group hover:border-orange-200 transition-all duration-200 cursor-default shadow-sm hover:shadow-md"
+            className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 group hover:border-amber-200 transition-all duration-200 cursor-default shadow-sm hover:shadow-md"
         >
             <div className="flex items-center gap-3">
                <div className={`w-2 h-2 rounded-full ${color} shrink-0 transition-transform duration-200 group-hover:scale-130`} />

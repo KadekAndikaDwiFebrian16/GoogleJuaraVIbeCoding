@@ -20,10 +20,10 @@ export default function MobileBottomNav() {
       path: '/',
       label: 'Resep',
       icon: Utensils,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50 text-orange-600',
-      activeColor: 'text-orange-600',
-      dotColor: 'bg-orange-600',
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50 text-amber-600',
+      activeColor: 'text-amber-600',
+      dotColor: 'bg-amber-500',
     },
     {
       path: '/custom-recipes',
@@ -37,7 +37,7 @@ export default function MobileBottomNav() {
   ];
 
   return (
-    <div id="mobile-bottom-nav" className="fixed bottom-4 left-4 right-4 h-16 bg-white/95 backdrop-blur-lg border border-gray-100 shadow-[0_10px_30px_rgba(251,146,60,0.12)] rounded-[2rem] flex justify-between items-center px-4 md:hidden z-[150] overflow-hidden">
+    <div id="mobile-bottom-nav" className="fixed bottom-4 left-4 right-4 h-16 bg-white/95 backdrop-blur-lg border border-gray-100 shadow-[0_10px_30px_rgba(245,158,11,0.12)] rounded-[2rem] flex justify-between items-center px-4 md:hidden z-[150] overflow-hidden">
       {navItems.map((item) => {
         // Match home strictly, other paths with startsWith
         const isActive = item.path === '/' 

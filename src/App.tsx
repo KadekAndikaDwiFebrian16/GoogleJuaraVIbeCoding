@@ -122,7 +122,7 @@ function AppContent() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-[#FAFAF8] text-[#2D2D2D] font-sans selection:bg-orange-600 selection:text-white relative overflow-x-hidden">
+      <div className="min-h-screen bg-[#FAFAF8] text-[#2D2D2D] font-sans selection:bg-amber-500 selection:text-white relative overflow-x-hidden">
         {/* Global Floating Toast */}
         <div className="fixed top-4 md:top-6 left-0 right-0 z-[100000] flex justify-center pointer-events-none px-4">
           <AnimatePresence>
@@ -132,15 +132,15 @@ function AppContent() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -30, scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 450, damping: 28 }}
-                className="pointer-events-auto flex items-center gap-3.5 px-5 py-3.5 rounded-2xl shadow-[0_20px_50px_rgba(251,146,60,0.18),0_1px_4px_rgba(0,0,0,0.05)] border backdrop-blur-lg max-w-[95vw] w-[380px]"
+                className="pointer-events-auto flex items-center gap-3.5 px-5 py-3.5 rounded-2xl shadow-[0_20px_50px_rgba(245,158,11,0.18),0_1px_4px_rgba(0,0,0,0.05)] border backdrop-blur-lg max-w-[95vw] w-[380px]"
                 style={{
                   backgroundColor: toast.type === 'success' ? 'rgba(255, 255, 255, 0.99)' : toast.type === 'error' ? 'rgba(254, 242, 242, 0.99)' : 'rgba(255, 255, 255, 0.99)',
-                  borderColor: toast.type === 'success' ? '#FED7AA' : toast.type === 'error' ? '#FECACA' : '#E5E7EB',
+                  borderColor: toast.type === 'success' ? '#FDE68A' : toast.type === 'error' ? '#FECACA' : '#E5E7EB',
                 }}
               >
                 <div className="flex-shrink-0">
                   {toast.type === 'success' ? (
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-orange-500/15">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-yellow-500 to-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-500/15">
                       <motion.span
                         animate={{ scale: [1, 1.15, 1, 1.15, 1], rotate: [0, 8, -8, 8, 0] }}
                         transition={{ repeat: Infinity, duration: 2.5, repeatDelay: 1.5 }}
@@ -154,14 +154,14 @@ function AppContent() {
                       ✕
                     </div>
                   ) : (
-                    <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs">
+                    <div className="w-9 h-9 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-xs">
                       ℹ
                     </div>
                   )}
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.15em] text-orange-600/80 mb-0.5 font-sans">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-600/80 mb-0.5 font-sans">
                     {toast.type === 'success' ? 'Berhasil Terkirim' : toast.type === 'error' ? 'Kesalahan' : 'Pemberitahuan'}
                   </h4>
                   <p className="text-xs font-bold text-gray-800 leading-snug">
@@ -189,7 +189,7 @@ function AppContent() {
               rotate: [0, 45, 0]
             }} 
             transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-            className="absolute -top-24 -left-24 w-[500px] h-[500px] bg-orange-50/50 rounded-full blur-[100px]" 
+            className="absolute -top-24 -left-24 w-[500px] h-[500px] bg-amber-50/50 rounded-full blur-[100px]" 
           />
           <motion.div 
             animate={{ 

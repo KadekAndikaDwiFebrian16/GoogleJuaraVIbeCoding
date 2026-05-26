@@ -53,7 +53,7 @@ export default function RecipeSlideGroup({ recipes, title }: RecipeSlideGroupPro
           </h2>
         )}
         <div className="flex items-center gap-3 mt-2 md:mt-4">
-          <div className="h-[2px] w-12 bg-orange-600 rounded-full" />
+          <div className="h-[2px] w-12 bg-amber-500 rounded-full" />
           <p className="text-xs md:text-sm font-bold uppercase tracking-[0.15em] text-gray-500">
             Menampilkan {recipes.length} Resep Terpilih
           </p>
@@ -102,7 +102,7 @@ export default function RecipeSlideGroup({ recipes, title }: RecipeSlideGroupPro
                   }}
                   className={`w-9 h-9 md:w-10 md:h-10 flex-shrink-0 flex items-center justify-center rounded-xl text-xs md:text-sm font-bold transition-all duration-300 ${
                     currentPage === i + 1 
-                      ? 'bg-orange-600 text-white shadow-lg shadow-orange-200/50 scale-110' 
+                      ? 'bg-amber-500 text-white shadow-lg shadow-amber-200/50 scale-110' 
                       : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50 hover:border-gray-300'
                   }`}
                 >
