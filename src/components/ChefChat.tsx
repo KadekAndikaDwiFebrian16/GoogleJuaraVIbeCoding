@@ -129,7 +129,7 @@ export default function ChefChat({ isOpen, onToggle }: { isOpen: boolean, onTogg
                 <Salad size={20} />
               </div>
               <div>
-                <h3 className="text-sm font-bold tracking-tight">AI Nutritionist</h3>
+                <h3 className="text-sm font-bold tracking-tight">Chef AI</h3>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400 opacity-80">Chef Digital Dapursehat</span>
               </div>
             </div>

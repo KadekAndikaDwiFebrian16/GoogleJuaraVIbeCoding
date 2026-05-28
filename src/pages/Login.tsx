@@ -19,10 +19,11 @@ export default function Login() {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      await signInWithGoogle();
+       await signInWithGoogle();
     } catch (error) {
-      console.error(error);
-      setLoading(false);
+       console.error(error);
+    } finally {
+       setLoading(false);
     }
   };
 
