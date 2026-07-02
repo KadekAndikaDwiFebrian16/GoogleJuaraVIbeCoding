@@ -91,6 +91,20 @@ export default function Login() {
           )}
         </button>
 
+        {/* Fallback button for Iframe sandbox & Cookie restrictions */}
+        <div className="mt-4 pt-4 border-t border-dashed border-gray-100 text-center">
+          <button
+            type="button"
+            onClick={() => window.open(window.location.href, '_blank')}
+            className="w-full flex items-center justify-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/50 text-[10px] uppercase tracking-widest font-bold py-3 px-6 rounded-2xl transition-all active:scale-95 font-sans"
+          >
+            <span>Buka di Tab Baru ↗</span>
+          </button>
+          <p className="text-[10px] text-gray-400 mt-2 font-medium leading-relaxed">
+            Sangat disarankan jika tombol Google di atas tidak merespon atau gagal masuk. Batasan keamanan browser memblokir pop-up/cookies jika dijalankan di dalam preview iframe.
+          </p>
+        </div>
+
         {errorMsg && (
           <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-left text-xs text-red-600 font-sans">
             <p className="font-bold mb-1">Gagal Masuk:</p>

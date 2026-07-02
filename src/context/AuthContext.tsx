@@ -27,37 +27,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const userDoc = await getDoc(userDocRef);
+        try {
+          const userDocRef = doc(db, 'users', firebaseUser.uid);
+          const userDoc = await getDoc(userDocRef);
 
-        if (userDoc.exists()) {
-          const data = userDoc.data() as UserProfile;
-          const isAdminEmail = firebaseUser.email === 'febriandwiiiii@gmail.com';
-          
-          if (isAdminEmail && data.role !== 'admin') {
-            // Promote to admin if not already
-            await setDoc(userDocRef, { role: 'admin' }, { merge: true });
-            setProfile({ ...data, role: 'admin' });
+          if (userDoc.exists()) {
+            const data = userDoc.data() as UserProfile;
+            const isAdminEmail = firebaseUser.email === 'febriandwiiiii@gmail.com';
+            
+            if (isAdminEmail && data.role !== 'admin') {
+              // Promote to admin if not already
+              await setDoc(userDocRef, { role: 'admin' }, { merge: true });
+              setProfile({ ...data, role: 'admin' });
+            } else {
+              setProfile(data);
+            }
           } else {
-            setProfile(data);
+            // Check if it's the first admin or a standard user
+            const isAdminEmail = firebaseUser.email === 'febriandwiiiii@gmail.com';
+            
+            const newProfile: UserProfile = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              displayName: firebaseUser.displayName || 'User',
+              photoURL: firebaseUser.photoURL || '',
+              role: isAdminEmail ? 'admin' : 'user',
+              createdAt: new Date().toISOString(),
+            };
+            await setDoc(userDocRef, {
+                ...newProfile,
+                createdAt: serverTimestamp()
+            });
+            setProfile(newProfile);
           }
-        } else {
-          // Check if it's the first admin or a standard user
-          const isAdminEmail = firebaseUser.email === 'febriandwiiiii@gmail.com';
-          
-          const newProfile: UserProfile = {
+        } catch (error) {
+          console.error("Error loading user profile from Firestore:", error);
+          // Fallback profile to let the user login anyway
+          setProfile({
             uid: firebaseUser.uid,
             email: firebaseUser.email || '',
             displayName: firebaseUser.displayName || 'User',
             photoURL: firebaseUser.photoURL || '',
-            role: isAdminEmail ? 'admin' : 'user',
+            role: firebaseUser.email === 'febriandwiiiii@gmail.com' ? 'admin' : 'user',
             createdAt: new Date().toISOString(),
-          };
-          await setDoc(userDocRef, {
-              ...newProfile,
-              createdAt: serverTimestamp()
           });
-          setProfile(newProfile);
         }
       } else {
         setProfile(null);
