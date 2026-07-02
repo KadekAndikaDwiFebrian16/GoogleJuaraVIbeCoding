@@ -7,8 +7,6 @@ import { Salad } from 'lucide-react';
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [errorDetails, setErrorDetails] = useState<any>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -20,30 +18,10 @@ export default function Login() {
 
   const handleLogin = async () => {
     setLoading(true);
-    setErrorMsg(null);
-    setErrorDetails(null);
     try {
        await signInWithGoogle();
-    } catch (error: any) {
-       console.error("Login error details:", error);
-       setErrorDetails(error);
-       
-       const code = error?.code || "";
-       const message = error?.message || "";
-       
-       if (code === "auth/unauthorized-domain") {
-         setErrorMsg("Domain ini belum terdaftar di daftar domain yang diizinkan (Authorized Domains) di Firebase Console.");
-       } else if (code === "auth/operation-not-allowed") {
-         setErrorMsg("Metode Google Sign-In belum diaktifkan di Firebase Console (Authentication -> Sign-in method).");
-       } else if (code === "auth/popup-blocked") {
-         setErrorMsg("Popup diblokir oleh browser Anda. Silakan izinkan popup untuk situs ini agar jendela masuk Google dapat terbuka.");
-       } else if (code === "auth/popup-closed-by-user") {
-         setErrorMsg("Proses masuk dibatalkan karena jendela masuk Google ditutup sebelum selesai.");
-       } else if (code === "auth/internal-error" || code.includes("network")) {
-         setErrorMsg("Masalah koneksi jaringan atau konfigurasi Firebase internal. Harap periksa koneksi internet Anda.");
-       } else {
-         setErrorMsg(message || "Gagal masuk menggunakan Google. Silakan periksa konfigurasi Firebase Anda.");
-       }
+    } catch (error) {
+       console.error(error);
     } finally {
        setLoading(false);
     }
@@ -90,13 +68,6 @@ export default function Login() {
             </>
           )}
         </button>
-
-        {errorMsg && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-left text-xs text-red-600 font-sans">
-            <p className="font-bold mb-1">Gagal Masuk:</p>
-            <p className="font-medium">{errorMsg}</p>
-          </div>
-        )}
 
         <div className="mt-12 pt-8 border-t border-gray-50 flex flex-col gap-4">
             <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Admin & Member Portal</p>

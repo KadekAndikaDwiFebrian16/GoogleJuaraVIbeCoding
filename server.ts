@@ -4,9 +4,6 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import webPush from "web-push";
 import "dotenv/config";
-import helmet from "helmet";
-import cors from "cors";
-import { rateLimit } from "express-rate-limit";
 
 import fs from "fs";
 
@@ -28,36 +25,6 @@ import { getFirestore, doc, setDoc, deleteDoc, getDocs, collection } from "fireb
 async function startServer() {
   const app = express();
   const PORT = 3000;
-
-  // Trust upstream proxies (Google Cloud Load Balancer, Cloud Run, Firebase Hosting)
-  app.set("trust proxy", true);
-
-  // Enable helmet middleware for strong HTTP security headers (Clickjacking, XSS, MIME sniffing, HSTS)
-  // We disable CSP (Content Security Policy) to prevent breaking dynamic loading of assets and client-side scripts
-  app.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false,
-  }));
-
-  // Enable CORS with secure options (reflecting request origin and allowing credentials)
-  app.use(cors({
-    origin: true,
-    credentials: true,
-  }));
-
-  // Protect API endpoints from automated attacks or abuse (Rate Limiting)
-  const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-    message: {
-      error: "Terlalu banyak permintaan dari IP ini. Silakan coba lagi dalam 15 menit.",
-    },
-  });
-
-  // Apply the rate limiter specifically to API endpoints
-  app.use("/api/", apiLimiter);
 
   app.use(express.json());
 
