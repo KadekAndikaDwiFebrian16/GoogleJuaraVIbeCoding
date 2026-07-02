@@ -4,6 +4,8 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import webPush from "web-push";
 import "dotenv/config";
+import helmet from "helmet";
+import cors from "cors";
 
 import fs from "fs";
 
@@ -28,6 +30,19 @@ async function startServer() {
 
   // Trust upstream proxies (Google Cloud Load Balancer, Cloud Run, Firebase Hosting)
   app.set("trust proxy", true);
+
+  // Enable helmet middleware for strong HTTP security headers (Clickjacking, XSS, MIME sniffing, HSTS)
+  // We disable CSP (Content Security Policy) to prevent breaking dynamic loading of assets and client-side scripts
+  app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  }));
+
+  // Enable CORS with secure options (reflecting request origin and allowing credentials)
+  app.use(cors({
+    origin: true,
+    credentials: true,
+  }));
 
   app.use(express.json());
 
