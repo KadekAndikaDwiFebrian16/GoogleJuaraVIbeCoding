@@ -7,6 +7,8 @@ import { Salad } from 'lucide-react';
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<any>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -18,10 +20,30 @@ export default function Login() {
 
   const handleLogin = async () => {
     setLoading(true);
+    setErrorMsg(null);
+    setErrorDetails(null);
     try {
        await signInWithGoogle();
-    } catch (error) {
-       console.error(error);
+    } catch (error: any) {
+       console.error("Login error details:", error);
+       setErrorDetails(error);
+       
+       const code = error?.code || "";
+       const message = error?.message || "";
+       
+       if (code === "auth/unauthorized-domain") {
+         setErrorMsg("Domain ini belum terdaftar di daftar domain yang diizinkan (Authorized Domains) di Firebase Console.");
+       } else if (code === "auth/operation-not-allowed") {
+         setErrorMsg("Metode Google Sign-In belum diaktifkan di Firebase Console (Authentication -> Sign-in method).");
+       } else if (code === "auth/popup-blocked") {
+         setErrorMsg("Popup diblokir oleh browser Anda. Silakan izinkan popup untuk situs ini agar jendela masuk Google dapat terbuka.");
+       } else if (code === "auth/popup-closed-by-user") {
+         setErrorMsg("Proses masuk dibatalkan karena jendela masuk Google ditutup sebelum selesai.");
+       } else if (code === "auth/internal-error" || code.includes("network")) {
+         setErrorMsg("Masalah koneksi jaringan atau konfigurasi Firebase internal. Harap periksa koneksi internet Anda.");
+       } else {
+         setErrorMsg(message || "Gagal masuk menggunakan Google. Silakan periksa konfigurasi Firebase Anda.");
+       }
     } finally {
        setLoading(false);
     }
@@ -68,6 +90,41 @@ export default function Login() {
             </>
           )}
         </button>
+
+        {errorMsg && (
+          <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-left text-xs text-red-600 font-sans">
+            <p className="font-bold mb-1">Gagal Masuk:</p>
+            <p className="mb-2 font-medium">{errorMsg}</p>
+            
+            {errorDetails?.code === "auth/unauthorized-domain" && (
+              <div className="mt-3 pt-3 border-t border-red-200/50 text-gray-600">
+                <p className="font-bold text-red-700 mb-1">Solusi Langkah demi Langkah:</p>
+                <ol className="list-decimal pl-4 space-y-1 text-gray-500">
+                  <li>Buka <strong>Firebase Console</strong> proyek Anda.</li>
+                  <li>Pergi ke menu <strong>Authentication</strong> &gt; tab <strong>Settings</strong> &gt; pilih <strong>Authorized domains</strong>.</li>
+                  <li>Klik <strong>Add domain</strong> dan masukkan domain berikut satu per satu:</li>
+                </ol>
+                <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded-xl font-mono text-[9px] select-all break-all text-gray-700 space-y-1">
+                  <div>{window.location.hostname}</div>
+                  <div>ais-dev-3pbzy5hjfkqhtpj2yiajap-754186152609.asia-east1.run.app</div>
+                  <div>ais-pre-3pbzy5hjfkqhtpj2yiajap-754186152609.asia-east1.run.app</div>
+                  <div>dapur-sehat-1003631932632.asia-southeast1.run.app</div>
+                </div>
+              </div>
+            )}
+            
+            {errorDetails?.code === "auth/operation-not-allowed" && (
+              <div className="mt-3 pt-3 border-t border-red-200/50 text-gray-600">
+                <p className="font-bold text-red-700 mb-1">Solusi Langkah demi Langkah:</p>
+                <ol className="list-decimal pl-4 space-y-1 text-gray-500">
+                  <li>Buka <strong>Firebase Console</strong> proyek Anda.</li>
+                  <li>Pergi ke menu <strong>Authentication</strong> &gt; tab <strong>Sign-in method</strong>.</li>
+                  <li>Di bawah "Additional providers", pilih <strong>Google</strong>, aktifkan statusnya (enable), lalu atur email dukungan proyek Anda. Klik <strong>Save</strong>.</li>
+                </ol>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mt-12 pt-8 border-t border-gray-50 flex flex-col gap-4">
             <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Admin & Member Portal</p>
