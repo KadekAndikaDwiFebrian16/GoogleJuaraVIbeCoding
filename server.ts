@@ -26,6 +26,9 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  // Trust upstream proxies (Google Cloud Load Balancer, Cloud Run, Firebase Hosting)
+  app.set("trust proxy", true);
+
   app.use(express.json());
 
   // Capture public APP_URL dynamically from first client visits or env injection
