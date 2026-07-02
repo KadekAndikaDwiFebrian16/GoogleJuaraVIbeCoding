@@ -91,52 +91,10 @@ export default function Login() {
           )}
         </button>
 
-        {/* Fallback button for Iframe sandbox & Cookie restrictions */}
-        <div className="mt-4 pt-4 border-t border-dashed border-gray-100 text-center">
-          <button
-            type="button"
-            onClick={() => window.open(window.location.href, '_blank')}
-            className="w-full flex items-center justify-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/50 text-[10px] uppercase tracking-widest font-bold py-3 px-6 rounded-2xl transition-all active:scale-95 font-sans"
-          >
-            <span>Buka di Tab Baru ↗</span>
-          </button>
-          <p className="text-[10px] text-gray-400 mt-2 font-medium leading-relaxed">
-            Sangat disarankan jika tombol Google di atas tidak merespon atau gagal masuk. Batasan keamanan browser memblokir pop-up/cookies jika dijalankan di dalam preview iframe.
-          </p>
-        </div>
-
         {errorMsg && (
           <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-left text-xs text-red-600 font-sans">
             <p className="font-bold mb-1">Gagal Masuk:</p>
-            <p className="mb-2 font-medium">{errorMsg}</p>
-            
-            {errorDetails?.code === "auth/unauthorized-domain" && (
-              <div className="mt-3 pt-3 border-t border-red-200/50 text-gray-600">
-                <p className="font-bold text-red-700 mb-1">Solusi Langkah demi Langkah:</p>
-                <ol className="list-decimal pl-4 space-y-1 text-gray-500">
-                  <li>Buka <strong>Firebase Console</strong> proyek Anda.</li>
-                  <li>Pergi ke menu <strong>Authentication</strong> &gt; tab <strong>Settings</strong> &gt; pilih <strong>Authorized domains</strong>.</li>
-                  <li>Klik <strong>Add domain</strong> dan masukkan domain berikut satu per satu:</li>
-                </ol>
-                <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded-xl font-mono text-[9px] select-all break-all text-gray-700 space-y-1">
-                  <div>{window.location.hostname}</div>
-                  <div>ais-dev-3pbzy5hjfkqhtpj2yiajap-754186152609.asia-east1.run.app</div>
-                  <div>ais-pre-3pbzy5hjfkqhtpj2yiajap-754186152609.asia-east1.run.app</div>
-                  <div>dapur-sehat-1003631932632.asia-southeast1.run.app</div>
-                </div>
-              </div>
-            )}
-            
-            {errorDetails?.code === "auth/operation-not-allowed" && (
-              <div className="mt-3 pt-3 border-t border-red-200/50 text-gray-600">
-                <p className="font-bold text-red-700 mb-1">Solusi Langkah demi Langkah:</p>
-                <ol className="list-decimal pl-4 space-y-1 text-gray-500">
-                  <li>Buka <strong>Firebase Console</strong> proyek Anda.</li>
-                  <li>Pergi ke menu <strong>Authentication</strong> &gt; tab <strong>Sign-in method</strong>.</li>
-                  <li>Di bawah "Additional providers", pilih <strong>Google</strong>, aktifkan statusnya (enable), lalu atur email dukungan proyek Anda. Klik <strong>Save</strong>.</li>
-                </ol>
-              </div>
-            )}
+            <p className="font-medium">{errorMsg}</p>
           </div>
         )}
 
